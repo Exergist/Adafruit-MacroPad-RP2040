@@ -13,9 +13,132 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+ 
+/*
+//  __  __                      _____          _   _____  _____ ___   ___  _  _    ___  
+// |  \/  |                    |  __ \        | | |  __ \|  __ \__ \ / _ \| || |  / _ \ 
+// | \  / | __ _  ___ _ __ ___ | |__) |_ _  __| | | |__) | |__) | ) | | | | || |_| | | |
+// | |\/| |/ _` |/ __| '__/ _ \|  ___/ _` |/ _` | |  _  /|  ___/ / /| | | |__   _| | | |
+// | |  | | (_| | (__| | | (_) | |  | (_| | (_| | | | \ \| |    / /_| |_| |  | | | |_| |
+// |_|  |_|\__,_|\___|_|  \___/|_|   \__,_|\__,_| |_|  \_\_|   |____|\___/   |_|  \___/ 
+//																						
+// 																	SUPER DISPLAY SWITCH
+*/
+ 
+ // *************
+// *  SUMMARY  *
+// *************
+
+// Custom keymap for MacroPad RP2040 by Exergist (2025)
+// Functionality includes:
+//   • STUFF
+//   • STUFF
+//   • STUFF
+//   • STUFF
+//   • STUFF
+ 
+// **********************
+// *  ACKNOWLEDGEMENTS  *
+// **********************
+
+// MacroPad RP2040 hardware and original source code by Adafruit (https://learn.adafruit.com/adafruit-macropad-rp2040)
+// ASCII art by patorjk (https://patorjk.com/software/taag/, "Big" font)
+
+// **********************
+// *  INCLUDE & DEFINE  *
+// **********************
 
 #include QMK_KEYBOARD_H
+#include "deferred_exec.h"
 
+// ********************************
+// *  CUSTOM KEYCODE DECLARATION  *
+// ********************************
+
+// Name and assigned unique numbers for custom keycodes
+enum customKeycodes
+{
+	MACRO_1 = SAFE_RANGE,
+	MACRO_2,
+	MACRO_3,
+	MACRO_4,
+	MACRO_5,
+	MACRO_6,
+	MACRO_7,
+	MACRO_8,
+	MACRO_9,
+	MACRO_10,
+	MACRO_11,
+	MACRO_12,
+	PORT_CHECK
+};
+
+// **********************
+// *  GLOBAL VARIABLES  *
+// **********************
+
+///int selectedPort = 0; // Currently selected port on ATEN CS1824 KVMP switch
+///int ledIlluminationTime = 1000; // Time in milliseconds to illuminate LEDs
+///static deferred_token led_off_tok[RGBLIGHT_LED_COUNT]; // One deferred token per LED
+
+// ************
+// *  KEYMAP  *
+// ************
+
+// |---------------|
+// | Keypad Layout |
+// |---------------|
+
+//
+//				 	 			 	     /\						  
+//				 	 			 	     ||						  
+//				 	 				     USB					  
+//				 	 				     ||						  
+//				 	 				     \/						  
+//                  .--------------------------------------------.
+//                  | .------------------------.        ___      |
+//                  | |                        |     .-'   `-.   |
+//                  | |                        |    /         \  |
+//                  | |       OLED Screen      |   |  Encoder  | |
+//                  | |                        |    \         /  |
+//  Resest Button  =| |                        |     `-.___.-'   |
+//                  | '------------------------'                 |
+//                  | .------------..------------..------------. |
+//                  | |            ||            ||            | |
+//                  | |            ||            ||            | |
+//                  | |  Button1   ||  Button2   ||  Button3   | |
+//                  | |            ||            ||            | |
+//                  | |            ||            ||            | |
+//                  | '------------''------------''------------' |
+//                  | .------------..------------..------------. |
+//                  | |            ||            ||            | |
+//                  | |            ||            ||            | |
+//                  | |  Button4   ||  Button5   ||  Button6   | |
+//                  | |            ||            ||            | |
+//                  | |            ||            ||            | |
+//                  | '------------''------------''------------' |
+//                  | .------------..------------..------------. |
+//                  | |            ||            ||            | |
+//                  | |            ||            ||            | |
+//                  | |  Button7   ||  Button8   ||  Button9   | |
+//                  | |            ||            ||            | |
+//                  | |            ||            ||            | |
+//                  | '------------''------------''------------' |
+//                  | .------------..------------..------------. |
+//                  | |            ||            ||            | |
+//                  | |            ||            ||            | |
+//                  | |  Button10  ||  Button11  ||  Button12  | |
+//                  | |            ||            ||            | |
+//                  | |            ||            ||            | |
+//                  | '------------''------------''------------' |
+//                  '--------------------------------------------'
+//
+
+// |---------------|
+// | Device Keymap |
+// |---------------|
+
+// Defines the behavior for encoder and key presses across all applicable layers
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   [0] = LAYOUT(
                     LT(1,KC_MUTE),
@@ -33,12 +156,19 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   ),
 };
 
+// |------------------|
+// | Encoder Rotation |
+// |------------------|
+
 #ifdef ENCODER_MAP_ENABLE
 const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
   [0] = { ENCODER_CCW_CW(KC_VOLD, KC_VOLU) },
 };
 #endif
 
+// **********
+// *  OLED  *
+// **********
 
 #ifdef OLED_ENABLE
 static void render_qmk_logo(void) {
