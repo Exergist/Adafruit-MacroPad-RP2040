@@ -1,6 +1,8 @@
 # Adafruit-MacroPad-RP2040
 Source, firmware, and related files for Adafruit Macropad projects
 
+<img width="970" height="728" alt="image" src="https://github.com/user-attachments/assets/769a5053-d559-46b8-8a90-bd025da6390b" />
+
 
 PLACEHOLDER FOR NOW
 Use QMK MSYS to get rolling:
