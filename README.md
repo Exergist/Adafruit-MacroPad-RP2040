@@ -39,7 +39,7 @@ Control device for the [ATEN CS1924](https://www.aten.com/us/en/products/kvm/des
 <details>
 <summary> <b>QMK Configurator Method</b> </summary>
 
- 1. Load the [bigKNOB default configuration](https://config.qmk.fm/#/leafcutterlabs/bigknob/LAYOUT) in the QMK Configurator.
+ 1. Load the [MacroPad RP2040 default configuration](https://config.qmk.fm/#/adafruit/macropad/LAYOUT) in the QMK Configurator.
  2. Select the functions for the buttons and click compile.
     
     <img width="883" height="764" alt="image" src="https://github.com/user-attachments/assets/978bf79f-de0d-4af6-a520-38217a9c30d9" />
