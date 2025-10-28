@@ -40,7 +40,7 @@ Control device for the [ATEN CS1924](https://www.aten.com/us/en/products/kvm/des
  1. Load the [bigKNOB default configuration](https://config.qmk.fm/#/leafcutterlabs/bigknob/LAYOUT) in the QMK Configurator.
  2. Select the functions for the buttons and click compile.
     
-    <img width="881" height="819" alt="image" src="https://github.com/user-attachments/assets/253a66f3-f9da-4abe-a734-8a6507911d07" />
+    <img width="883" height="764" alt="image" src="https://github.com/user-attachments/assets/978bf79f-de0d-4af6-a520-38217a9c30d9" />
 
  3. Once the compiling is complete, download and save the firmware uf2 file.
 </details>
@@ -50,7 +50,7 @@ Control device for the [ATEN CS1924](https://www.aten.com/us/en/products/kvm/des
  1. Go through [The QMK Tutorial](https://docs.qmk.fm/#/newbs). To get started, create a new keymap project within QMK MSYS environment by running `qmk new-keymap -kb [keyboard name] -km [name of project]`
     * Example: `qmk new-keymap -kb adafruit/macropad -km SuperDisplaySwitch`
  3. Create the desired keyboard behavior by building content in the _keymap.c_ file.
- 4. Add (or copy from other bigKNOB efforts) _config.h_ and _rules.mk_ files if needed (most likely YES) into the same location as the _keymap.c_ file.
+ 4. Add (or copy from other QMK MacroPad RP2040 efforts) _config.h_ and _rules.mk_ files if needed (most likely YES) into the same location as the _keymap.c_ file.
  5. When _keymap.c_ and (if applicable) _config.h_ and _rules.mk_ are ready, go back to QMK MSYS and run `qmk compile -j 0 -kb [keyboard name] -km [name of project]`.
     * Example: `qmk compile -j 0 -kb adafruit/macropad -km SuperDisplaySwitch`
  6. The outputted firmware (uf2 file) is located at `...qmk_firmware\.build\[keyboard_name]_[project_name].uf2`
@@ -70,3 +70,12 @@ Control device for the [ATEN CS1924](https://www.aten.com/us/en/products/kvm/des
  6. The MacroPad should auto-restart and launch with the new firmware.
 
 </details>
+
+## Notes
+ * My MacroPad RP2040 was ordered through [Adafruit](https://www.adafruit.com/product/5128) in December 2021. 
+ * Additional QMK resources are compiled in the [QMK Syllabus](https://docs.qmk.fm/#/syllabus).
+
+## Acknowledgements
+* [QMK](https://qmk.fm/about) is developed and maintained by Jack Humbert of OLKB with contributions from the community (and Hasu).
+* Keymap header ASCII art by [patorjk](https://patorjk.com/software/taag/).
+* [ForsakenRei](https://github.com/ForsakenRei) for his [RP2040-MacroPad](https://github.com/ForsakenRei/RP2040-MacroPad/tree/main) project which was a useful reference.
