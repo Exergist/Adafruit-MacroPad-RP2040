@@ -71,7 +71,7 @@ Adafruit provides a [comprehensive guide](https://learn.adafruit.com/adafruit-ma
     [Show image of the MacroPad and highlight the locations of the encoder and reset button]
  3. The MacroPad should enter bootloader mode and a new device should be available on the computer (???????).
     [Show image of the new device]
- 5. Drag and drop the desired firmware uf2 file int the (???????) device.
+ 5. Drag and drop the desired firmware uf2 file into the (???????) device.
  6. The MacroPad should auto-restart and launch with the new firmware.
 
 </details>
