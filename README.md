@@ -80,4 +80,4 @@ Control device for the [ATEN CS1924](https://www.aten.com/us/en/products/kvm/des
 ## Acknowledgements
 * [QMK](https://qmk.fm/about) is developed and maintained by Jack Humbert of OLKB with contributions from the community (and Hasu).
 * Keymap header ASCII art by [patorjk](https://patorjk.com/software/taag/).
-* [ForsakenRei](https://github.com/ForsakenRei) for his [RP2040-MacroPad](https://github.com/ForsakenRei/RP2040-MacroPad/tree/main) project which was a useful reference.
+* [ForsakenRei](https://github.com/ForsakenRei) for his [RP2040-MacroPad](https://github.com/ForsakenRei/RP2040-MacroPad/tree/main) project, which was a useful reference.
