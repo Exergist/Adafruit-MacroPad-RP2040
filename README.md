@@ -45,7 +45,7 @@ Control device for the [ATEN CS1924](https://www.aten.com/us/en/products/kvm/des
  3. Once the compiling is complete, download and save the firmware uf2 file.
 </details>
 <details>
-<summary> <b>Code-Only Method</b> </summary>
+<summary> <b>QMK Code-Only Method</b> </summary>
 
  1. Go through [The QMK Tutorial](https://docs.qmk.fm/#/newbs). To get started, create a new keymap project within QMK MSYS environment by running `qmk new-keymap -kb [keyboard name] -km [name of project]`
     * Example: `qmk new-keymap -kb adafruit/macropad -km SuperDisplaySwitch`
@@ -55,6 +55,11 @@ Control device for the [ATEN CS1924](https://www.aten.com/us/en/products/kvm/des
     * Example: `qmk compile -j 0 -kb adafruit/macropad -km SuperDisplaySwitch`
  6. The outputted firmware (uf2 file) is located at `...qmk_firmware\.build\[keyboard_name]_[project_name].uf2`
     * Example: `...qmk_firmware\.build\adafruit_macropad_SuperDisplaySwitch.uf2`
+</details>
+<details>
+<summary> <b>CircuitPython Method</b> </summary>
+
+Adafruit provides a [comprehensive guide](https://learn.adafruit.com/adafruit-macropad-rp2040/circuitpython) that walks through using CircuitPython to build firmware for the MacroPad RP2040. Note that this project currently focuses on using QMK for building the firmware.
 </details>
 
 ### Installing the Firmware
