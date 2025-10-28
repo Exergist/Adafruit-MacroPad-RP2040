@@ -2,7 +2,7 @@
 <img width="574" height="431" alt="image" src="https://github.com/user-attachments/assets/769a5053-d559-46b8-8a90-bd025da6390b" />
 
 ## What Is This?
-This project includes QMK files for various keymaps for the Adafruit MacroPad RP2040 with 12 RGB LED key switches, a rotary indented encoder, and an OLED screen. 
+This project includes QMK files for various keymaps for the [Adafruit MacroPad RP2040](https://learn.adafruit.com/adafruit-macropad-rp2040) with 12 RGB LED key switches, a rotary indented encoder, and an OLED screen. 
 
 ## Key Maps
 ### Layout
