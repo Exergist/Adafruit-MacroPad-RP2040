@@ -2,31 +2,71 @@
 <img width="574" height="431" alt="image" src="https://github.com/user-attachments/assets/769a5053-d559-46b8-8a90-bd025da6390b" />
 
 ## What Is This?
-This project includes QMK files for various keymaps for the [Adafruit MacroPad RP2040](https://learn.adafruit.com/adafruit-macropad-rp2040) with 12 RGB LED key switches, a rotary indented encoder, and an OLED screen. 
+This project includes QMK files for various keymaps for the [Adafruit MacroPad RP2040](https://learn.adafruit.com/adafruit-macropad-rp2040), which includes 12 RGB LED key switches, a rotary encoder, and an OLED screen. 
 
 ## Key Maps
 ### Layout
-<img width="525" height="709" alt="image" src="https://github.com/user-attachments/assets/610a6c41-6475-478b-9a8f-e0b396c9ec2f" />
+<img width="575" height="712" alt="image" src="https://github.com/user-attachments/assets/625c252d-d6e4-4647-9010-c3e3ee2dcb0d" />
 
 ### SuperDisplaySwitch
-Control device for the [ATEN CS1924](https://www.aten.com/us/en/products/kvm/desktop-kvm-switches/cs1924/) 4-port KVMP switch. Jump to the files here [***ADD THE LINK!!]. 
+Control device for the [ATEN CS1924](https://www.aten.com/us/en/products/kvm/desktop-kvm-switches/cs1924/) 4-port KVMP switch. Jump to the files [here](https://github.com/Exergist/Adafruit-MacroPad-RP2040/tree/main/QMK/SuperDisplaySwitch). 
 <details>
 <summary><b>Keymap</b></summary>
-
+ 
+  * OLED Screen = WIP
  * Encoder
-   * Single-Tap = Illuminate key corresponding to currently focused port (if available)
+   * Single-Tap = Illuminate keys corresponding to the CS1924 KVMP's current configuration
    * Clockwise Rotation = Volume Up
    * Counter-Clockwise Rotation = Volume Down
- * Button 1 = Switch to port 1
- * Button 2 = Switch to port 2
- * Button 3 = Switch to port 3
- * Button 4 = Switch to port 4
+ * Button 1 = WIP
+ * Button 2 = WIP
+ * Button 3 = WIP
+ * Button 4 = WIP
+ * Button 5 = WIP
+ * Button 6 = WIP
+ * Button 7 = WIP
+ * Button 8 = WIP
+ * Button 9 = WIP
+ * Button 10 = WIP
+ * Button 11 = WIP
+ * Button 12 = WIP
 </details>
 
-PLACEHOLDER FOR NOW
-Use QMK MSYS to get rolling:
-  * New project ==> `qmk new-keymap -kb adafruit/macropad -km SuperDisplaySwitch`
-  * Compiling ==> `qmk compile -j 0 -kb adafruit/macropad -km SuperDisplaySwitch`
-  * Firmware Hex output ==> `...qmk_firmware\.build`
-Plug in Adafruit macropad into PC. Press down on the encoder and press the reset button to the left of the OLED screen. Macropad should enter bootloader mode and a new window should pop up in Windows.
-Drag and drop a desired firmware uf2 file into the new RP1-RP2 window. The macropad should then auto-restart and launch with the new firmware.
+## How to Build and Install the Firmware?
+### Creating the Firmware
+<details>
+<summary> <b>QMK Configurator Method</b> </summary>
+
+ 1. Load the [bigKNOB default configuration](https://config.qmk.fm/#/leafcutterlabs/bigknob/LAYOUT) in the QMK Configurator.
+ 2. Select the functions for the buttons and click compile.
+    
+    <img width="881" height="819" alt="image" src="https://github.com/user-attachments/assets/253a66f3-f9da-4abe-a734-8a6507911d07" />
+
+ 3. Once the firmware is compiled, download and save the (WHAT TYPE???) file.
+</details>
+<details>
+<summary> <b>Code-Only Method</b> </summary>
+
+ 1. Go through [The QMK Tutorial](https://docs.qmk.fm/#/newbs). To get started, create a new keymap project within QMK MSYS environment by running `qmk new-keymap -kb [keyboard name] -km [name of project]`
+    * Example: `qmk new-keymap -kb adafruit/macropad -km SuperDisplaySwitch`
+ 3. Create the desired keyboard behavior by building content in the _keymap.c_ file.
+ 4. Add (or copy from other bigKNOB efforts) _config.h_ and _rules.mk_ files if needed (most likely YES) into the same location as the _keymap.c_ file.
+ 5. When _keymap.c_ and (if applicable) _config.h_ and _rules.mk_ are ready, go back to QMK MSYS and run `qmk compile -j 0 -kb [keyboard name] -km [name of project]`.
+    * Example: `qmk compile -j 0 -kb adafruit/macropad -km SuperDisplaySwitch`
+ 6. The outputted firmware (uf2 file) is located at `...qmk_firmware\.build\[keyboard_name]_[project_name].uf2`
+    * Example: `...qmk_firmware\.build\adafruit_macropad_SuperDisplaySwitch.uf2`
+</details>
+
+### Installing the Firmware
+<details>
+<summary> <b>Firmware Drag-and-Drop Method</b> </summary>
+
+ 1. Plug the Adafruit MacroPad RP2040 into the computer.
+ 2. Press and hold down on the encoder, and then press the reset button (located to the left of the OLED screen on the side of the board).
+    [Show image of the MacroPad and highlight the locations of the encoder and reset button]
+ 3. The MacroPad should enter bootloader mode and a new device should be available on the computer (???????).
+    [Show image of the new device]
+ 5. Drag and drop the desired firmware uf2 file int the (???????) device.
+ 6. The MacroPad should auto-restart and launch with the new firmware.
+
+</details>
