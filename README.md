@@ -1,8 +1,27 @@
-# Adafruit-MacroPad-RP2040
-Source, firmware, and related files for Adafruit Macropad projects
+# Adafruit MacroPad RP2040
+<img width="574" height="431" alt="image" src="https://github.com/user-attachments/assets/769a5053-d559-46b8-8a90-bd025da6390b" />
 
-<img width="970" height="728" alt="image" src="https://github.com/user-attachments/assets/769a5053-d559-46b8-8a90-bd025da6390b" />
+## What Is This?
+This project includes QMK files for various keymaps for the Adafruit MacroPad RP2040 with 12 RGB LED key switches, a rotary indented encoder, and an OLED screen. 
 
+## Key Maps
+### Layout
+<img width="525" height="709" alt="image" src="https://github.com/user-attachments/assets/610a6c41-6475-478b-9a8f-e0b396c9ec2f" />
+
+### SuperDisplaySwitch
+Control device for the [ATEN CS1924](https://www.aten.com/us/en/products/kvm/desktop-kvm-switches/cs1924/) 4-port KVMP switch. Jump to the files here [***ADD THE LINK!!]. 
+<details>
+<summary><b>Keymap</b></summary>
+
+ * Encoder
+   * Single-Tap = Illuminate key corresponding to currently focused port (if available)
+   * Clockwise Rotation = Volume Up
+   * Counter-Clockwise Rotation = Volume Down
+ * Button 1 = Switch to port 1
+ * Button 2 = Switch to port 2
+ * Button 3 = Switch to port 3
+ * Button 4 = Switch to port 4
+</details>
 
 PLACEHOLDER FOR NOW
 Use QMK MSYS to get rolling:
