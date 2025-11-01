@@ -55,16 +55,18 @@
 //#define DEVICE_VER      0x0001
 //#define MANUFACTURER    "Adafruit"
 //#define PRODUCT         "macropad"
-#define DESCRIPTION     "12 key macropad with rotary encoder and OLED screen"
-#define RAW_USAGE_PAGE 	0xFF60 // Raw HID communication
-#define RAW_USAGE_ID 	0x61 // Raw HID communication
+#define DESCRIPTION       "12 key macropad with rotary encoder and OLED screen"
+#define RAW_USAGE_PAGE 	  0xFF60 // Raw HID communication
+#define RAW_USAGE_ID 	  0x61 // Raw HID communication
 
 ///#define TAPPING_TERM 250 // Speed for double-tap
 
 ///define ENCODER_RESOLUTION 4 // Original default was 2, however a value of 4 works better
 
 // RGB LEDs are ws2812
-#define RGBLIGHT_LIMIT_VAL 128 // Set max value (brightness) for LEDs (max limit is 255 or RGBLIGHT_LIMIT_VAL)
+#define RGB_DI_PIN GP0
 #define RGBLIGHT_DEFAULT_VAL 0 // Set default value (brightness) for LEDs
+#define RGBLIGHT_LIMIT_VAL 128 // Set max value (brightness) for LEDs (max limit is 255 or RGBLIGHT_LIMIT_VAL)
 #define RGBLIGHT_SLEEP // RGB lighting will be switched off when the host goes to sleep
-#define RGB_MATRIX_LED_COUNT 12
+#define RGBLIGHT_LED_COUNT 12
+//#define RGB_MATRIX_LED_COUNT 12
