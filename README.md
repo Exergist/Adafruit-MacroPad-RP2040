@@ -79,12 +79,12 @@ Adafruit provides a [comprehensive guide](https://learn.adafruit.com/adafruit-ma
 </details>
 
 ## Notes
- * My MacroPad RP2040 was ordered through [Adafruit](https://www.adafruit.com/product/5128) in December 2021. 
- * Additional MacroPad RP2040 resources may be found on [Adafruit's website](https://learn.adafruit.com/adafruit-macropad-rp2040).
- * Additional QMK resources are compiled in the [QMK Syllabus](https://docs.qmk.fm/#/syllabus).
-
+* My MacroPad RP2040 was ordered through [Adafruit](https://www.adafruit.com/product/5128) in December 2021. 
+* Additional MacroPad RP2040 resources may be found on [Adafruit's website](https://learn.adafruit.com/adafruit-macropad-rp2040).
+* Additional QMK resources are compiled in the [QMK Syllabus](https://docs.qmk.fm/#/syllabus).
 
 ## Acknowledgements
 * [QMK](https://qmk.fm/about) is developed and maintained by Jack Humbert of OLKB with contributions from the community (and Hasu).
 * Keymap header ASCII art by [patorjk](https://patorjk.com/software/taag/).
 * [ForsakenRei](https://github.com/ForsakenRei) for his [RP2040-MacroPad](https://github.com/ForsakenRei/RP2040-MacroPad/tree/main) project, which was a useful reference.
+* Laptop image created by Dong Gyu Yang from [Noun Project](https://thenounproject.com/icon/laptop-8086742/).
