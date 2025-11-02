@@ -10,7 +10,7 @@ Jump to the latest release here (LINK!!!).
 ### Layout
 <img width="575" height="712" alt="image" src="https://github.com/user-attachments/assets/625c252d-d6e4-4647-9010-c3e3ee2dcb0d" />
 
-### SuperDisplaySwitch
+### SuperKvmpSwitch
 Control device for the [ATEN CS1924](https://www.aten.com/us/en/products/kvm/desktop-kvm-switches/cs1924/) 4-port KVMP switch. Jump to the files [here](https://github.com/Exergist/Adafruit-MacroPad-RP2040/tree/main/QMK/SuperDisplaySwitch). 
 <details>
 <summary><b>Keymap</b></summary>
@@ -50,13 +50,13 @@ Control device for the [ATEN CS1924](https://www.aten.com/us/en/products/kvm/des
 <summary> <b>QMK Code-Only Method</b> </summary>
 
  1. Go through [The QMK Tutorial](https://docs.qmk.fm/#/newbs). To get started, create a new keymap project within QMK MSYS environment by running `qmk new-keymap -kb [keyboard name] -km [name of project]`
-    * Example: `qmk new-keymap -kb adafruit/macropad -km SuperDisplaySwitch`
+    * Example: `qmk new-keymap -kb adafruit/macropad -km SuperKvmpSwitch`
  3. Create the desired keyboard behavior by building content in the _keymap.c_ file.
  4. Add (or copy from other QMK MacroPad RP2040 efforts) _config.h_ and _rules.mk_ files if needed (most likely YES) into the same location as the _keymap.c_ file.
  5. When _keymap.c_ and (if applicable) _config.h_ and _rules.mk_ are ready, go back to QMK MSYS and run `qmk compile -j 0 -kb [keyboard name] -km [name of project]`.
-    * Example: `qmk compile -j 0 -kb adafruit/macropad -km SuperDisplaySwitch`
+    * Example: `qmk compile -j 0 -kb adafruit/macropad -km SuperKvmpSwitch`
  6. The outputted firmware (uf2 file) is located at `...qmk_firmware\.build\[keyboard_name]_[project_name].uf2`
-    * Example: `...qmk_firmware\.build\adafruit_macropad_SuperDisplaySwitch.uf2`
+    * Example: `...qmk_firmware\.build\adafruit_macropad_SuperKvmpSwitch.uf2`
 </details>
 <details>
 <summary> <b>CircuitPython Method</b> </summary>
