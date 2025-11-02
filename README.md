@@ -48,7 +48,9 @@ Control device for the [ATEN CS1924](https://www.aten.com/us/en/products/kvm/des
 </details>
 <details>
 <summary> <b>QMK Code-Only Method</b> </summary>
-
+<details>
+<summary> <i>General</i> </summary>
+ 
  1. Go through [The QMK Tutorial](https://docs.qmk.fm/#/newbs). To get started, create a new keymap project within QMK MSYS environment by running `qmk new-keymap -kb [keyboard name] -km [name of project]`
     * Example: `qmk new-keymap -kb adafruit/macropad -km SuperKvmpSwitch`
  3. Create the desired keyboard behavior by building content in the _keymap.c_ file.
@@ -58,6 +60,27 @@ Control device for the [ATEN CS1924](https://www.aten.com/us/en/products/kvm/des
  6. The outputted firmware (uf2 file) is located at `...qmk_firmware\.build\[keyboard_name]_[project_name].uf2`
     * Example: `...qmk_firmware\.build\adafruit_macropad_SuperKvmpSwitch.uf2`
 </details>
+ <details>
+<summary> <i>Creating Images for the OLED Screen</i> </summary>
+
+  1. Create an image (such as a *.png) you want to display on the OLED screen. Note that for best results the image should have white foreground coloring and black background coloring. 
+  2. Convert the image to a C byte array using a tool such as [image2cpp](https://javl.github.io/image2cpp/). Here are some detailed instructions when using image2cpp:
+     * The "Canvas Size" is the extent of the image as displayed on the OLED screen. Ideally the canvas width and height are multiples of 8 (e.g., 32x32, 64x64).
+     * Background Color = Black
+     * Dithering = Binary (though other types will likely work fine)
+     * Brightness/Alpha Threshold = 128
+     * Scaling = Scale to fit, keeping proportions
+     * Center Image = Horizontally and Vertically
+     * Code Output Format = Plain bytes
+     * Draw Mode = Vertical - 1 bit per pixel
+  3. The image2cpp tool provides a preview of what the image will look like for the provided Canvas Size.
+  4. Press the "Generate code" button, and a byte array corresponding to the preview image will be created.
+  5. Leverage this byte array in the `keymap.c` file (see [Source](https://github.com/Exergist/Adafruit-MacroPad-RP2040/blob/main/QMK/SuperKvmpSwitch/Source/keymap.c) for example usage).
+</details>
+</details>
+
+
+
 <details>
 <summary> <b>CircuitPython Method</b> </summary>
 
