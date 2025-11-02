@@ -32,6 +32,4 @@ OLED_TRANSPORT = spi		# Set OLED communication mechanism
 #AUDIO_DRIVER = pwm_hardware
 
 # Do not enable SLEEP_LED_ENABLE. It uses the same timer as BACKLIGHT_ENABLE.
-SLEEP_LED_ENABLE = no		# Enable breathing sleep for LEDs during USB suspend
-
-
+SLEEP_LED_ENABLE = no		# Breathing sleep for LEDs during USB suspend

@@ -5,7 +5,6 @@
 // get some audio code working just to try it out and have it available (though likely comment it out)
 
 
-
 /* Copyright (c) 2025 Exergist
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -209,8 +208,8 @@ static uint32_t oled_off_cb(uint32_t trigger_time, void *cb_arg) {
 }
 
 /*  Draw a 1-bit image stored in PROGMEM, formatted in SH1106 "page order"
-	w = width in pixels, h = height in pixels
-	x = column (0..127), y = row in pixels, but MUST be a multiple of 8 for this simple version */
+	w = width in pixels; h = height in pixels
+	x = column (0..127) and is calculated by: x = (128-w)/2; y = row in pixels, but MUST be a multiple of 8 for this simple version */
 static void oled_blit_P(const uint8_t *img, uint8_t w, uint8_t h, uint8_t x, uint8_t y, uint16_t ms) {
     oled_clear(); // Clear OLED screen
 	uint8_t pages = (h + 7) / 8;                 // how many 8-px pages the image spans
@@ -430,13 +429,13 @@ static const uint8_t PROGMEM laptop64x64[] = {
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
-
 /*  32x32 PC silhouette, 1-bit, page-ordered, LSB = top pixel
 	Converted using https://javl.github.io/image2cpp/ with the following settings:
 	* Background = Black; Dithering = Binary; Brightness/Alpha Threshold = 128
 	* Scaling = scale to fit; Center Image = horizontal and vertical
-	* Output Format = plain bytes; Draw Mode = Vertical - 1 bit per pixel 
-	Draw using ==> oled_blit_P(pc32x32, 32, 32, 46, 16, illuminationTime) */
+	* Output Format = plain bytes; Draw Mode = Vertical - 1 bit per pixel
+	* Note the below value of 46 is calculated by ==> (128-32)/2 = 32
+	Draw using ==> oled_blit_P(pc32x32, 32, 32, 48, 16, illuminationTime) */
 static const uint8_t PROGMEM pc32x32[] = {
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xfe, 0xff, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 
 	0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0x03, 0xff, 0xfe, 0x00, 0x00, 0x00, 0x00, 0x00, 
@@ -453,6 +452,7 @@ static const uint8_t PROGMEM pc32x32[] = {
 	* Background = Black; Dithering = Binary; Brightness/Alpha Threshold = 128
 	* Scaling = scale to fit; Center Image = horizontal and vertical
 	* Output Format = plain bytes; Draw Mode = Vertical - 1 bit per pixel 
+	* Note the below value of 32 is calculated by ==> (128-64)/2 = 32
 	Draw using ==> oled_blit_P(pc64x64, 64, 64, 32, 0, illuminationTime) */
 static const uint8_t PROGMEM pc64x64[] = {
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xfe, 0xfe, 0x0e, 0x06, 
@@ -492,6 +492,15 @@ static const uint8_t PROGMEM pc64x64[] = {
 // Method to display the QMK logo on the OLED screen
 static void render_qmk_logo(void) {
 	static const char PROGMEM qmk_logo[] = {
+        0x80, 0x81, 0x82, 0x83, 0x84, 0x85, 0x86, 0x87, 0x88, 0x89, 0x8A, 0x8B, 0x8C, 0x8D, 0x8E, 0x8F, 0x90, 0x91, 0x92, 0x93, 0x94,
+        0xA0, 0xA1, 0xA2, 0xA3, 0xA4, 0xA5, 0xA6, 0xA7, 0xA8, 0xA9, 0xAA, 0xAB, 0xAC, 0xAD, 0xAE, 0xAF, 0xB0, 0xB1, 0xB2, 0xB3, 0xB4,
+        0xC0, 0xC1, 0xC2, 0xC3, 0xC4, 0xC5, 0xC6, 0xC7, 0xC8, 0xC9, 0xCA, 0xCB, 0xCC, 0xCD, 0xCE, 0xCF, 0xD0, 0xD1, 0xD2, 0xD3, 0xD4, 0x00
+    };
+	
+	oled_set_cursor(0, 3); // Position the OLED cursor (21 columns × 8 rows on 128×64 OLED screen)
+	oled_write_P(qmk_logo, false); // Write the QMK logo on the OLED screen
+	
+	/* static const char PROGMEM qmk_logo[] = {
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -557,8 +566,8 @@ static void render_qmk_logo(void) {
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 	};
-
-	oled_write_raw_P(qmk_logo, sizeof(qmk_logo));
+	
+	oled_write_raw_P(qmk_logo, sizeof(qmk_logo)); // Write the QMK logo on the OLED screen */
 }
 
 #endif
@@ -593,7 +602,7 @@ void keyboard_post_init_user(void) {
 	rgblight_sethsv_noeeprom(HSV_GREEN); 
 
     // Schedule LEDs and OLED screen to turn off after brief period of time
-    defer_exec(illuminationTime, boot_effects_off_cb, NULL);
+    oled_off_tok = defer_exec(illuminationTime, boot_effects_off_cb, NULL);
 
 	// Position the OLED cursor (21 columns × 8 rows on 128×64 OLED screen)
 	oled_set_cursor(0, 2);
@@ -653,6 +662,7 @@ static void error_flash(void)
 // | ATEN CS1924 KVMP Switching |
 // |----------------------------|
 
+/* // Method to output ATEN CS1924 port or focus status via text information on the OLED screen
 static void port_config_report(PortReportingType type, uint16_t ms)
 {
 	char line1[16]; // Create a buffer
@@ -721,6 +731,85 @@ static void port_config_report(PortReportingType type, uint16_t ms)
 	} else {
 		oled_off_tok = defer_exec(ms, oled_off_cb, NULL); // Schedule a fresh deferral
 	}
+} */
+
+// Method to output ATEN CS1924 port or focus status via imagery on the OLED screen
+static void port_config_report(PortReportingType type, uint16_t ms)
+{
+	char line1[16]; // Create a buffer
+	oled_clear(); // Clear the OLED screen of content
+	
+	switch (type) {
+		case DEVICE:
+			if (kvmpConfig.Device.Port != -1) { // Check if the device port has been changed
+				if (kvmpConfig.Device.Port == 1) { // Check if port 1 is active
+					oled_blit_P(laptop64x64, 64, 64, 32, 0, illuminationTime); // Show laptop image on OLED screen
+				} else if (kvmpConfig.Device.Port == 2) {
+					oled_blit_P(raspi64x64, 64, 64, 32, 0, illuminationTime); // Show Raspberry Pi image on OLED screen
+				} else if (kvmpConfig.Device.Port == 3) {
+					oled_blit_P(pc64x64, 64, 64, 32, 0, illuminationTime); // Show PC image on OLED screen
+				} else {
+					error_flash(); // Flash error pattern on MacroPad
+				}
+			} else {
+				snprintf(line1, sizeof(line1), "Port:?"); // Insert content into line1
+				oled_write_ln(line1, false);  // Write line1 and include newline
+			}
+			break;
+		
+		case KVM:
+			if (kvmpConfig.KVM.Port != -1) { // Check if the KVM port has been changed
+				snprintf(line1, sizeof(line1), "KVM:%d", kvmpConfig.KVM.Port); // Insert content into line1
+			} else {
+				snprintf(line1, sizeof(line1), "KVM:?"); // Insert content into line1
+			}
+			oled_write_ln(line1, false);  // Write line1 and include newline
+			break;
+		
+		case USBHUB:
+			if (kvmpConfig.Usb.Port != -1) { // Check if the USB hub port has been changed
+				snprintf(line1, sizeof(line1), "USB:%d", kvmpConfig.Usb.Port); // Insert content into line1
+			} else {
+				snprintf(line1, sizeof(line1), "USB:?"); // Insert content into line1
+			}
+			oled_write_ln(line1, false);  // Write line1 and include newline
+			break;
+		
+		case AUDIO:
+			if (kvmpConfig.Audio.Port != -1) { // Check if the audio port has been changed
+				snprintf(line1, sizeof(line1), "Audio:%d", kvmpConfig.Audio.Port); // Insert content into line1
+			} else {
+				snprintf(line1, sizeof(line1), "Audio:?"); // Insert content into line1
+			}
+			oled_write_ln(line1, false);  // Write line1 and include newline
+			break;
+		
+		case ALL:
+			char line2[40], dvcStr[8], kvmStr[8], usbStr[8], audStr[8]; // Create buffers
+			
+			// Preprocess to format each value for possible insertion of "?"
+			snprintf(dvcStr, sizeof(dvcStr), "%s",  kvmpConfig.Device.Port   == -1 ? "?" : "");
+			snprintf(kvmStr, sizeof(kvmStr), "%s",  kvmpConfig.KVM.Port   == -1 ? "?" : "");
+			snprintf(usbStr, sizeof(usbStr), "%s",  kvmpConfig.Usb.Port   == -1 ? "?" : "");
+			snprintf(audStr, sizeof(audStr), "%s",  kvmpConfig.Audio.Port == -1 ? "?" : "");
+			
+			// Replace empty strings with actual port numbers
+			if (dvcStr[0] == '\0') snprintf(dvcStr, sizeof(dvcStr), "%d", kvmpConfig.Device.Port);
+			if (kvmStr[0] == '\0') snprintf(kvmStr, sizeof(kvmStr), "%d", kvmpConfig.KVM.Port);
+			if (usbStr[0] == '\0') snprintf(usbStr, sizeof(usbStr), "%d", kvmpConfig.Usb.Port);
+			if (audStr[0] == '\0') snprintf(audStr, sizeof(audStr), "%d", kvmpConfig.Audio.Port);
+
+			snprintf(line1, sizeof(line1), "Port:%s", dvcStr); // Insert content into line1
+			snprintf(line2, sizeof(line2), "KVM:%s USB:%s Audio:%s", kvmStr, usbStr, audStr); // Insert content into line2
+			oled_write_ln(line1, false);  // Write line1 to the OLED screen and include newline
+			oled_write_ln(line2, false);  // Write line2 to the OLED screen and include newline
+			break;
+	}
+	if (oled_off_tok != INVALID_DEFERRED_TOKEN) { // Check if a valid deferral token already exists
+		extend_deferred_exec(oled_off_tok, ms); // Extend the existing pending execution relative to "now"
+	} else {
+		oled_off_tok = defer_exec(ms, oled_off_cb, NULL); // Schedule a fresh deferral
+	}
 }
 
 // Method to change ports on the ATEN CS1924 KVMP switch
@@ -728,7 +817,7 @@ static void change_port(int portHotkey, int ledNumber)
 {
 	all_leds_off_noeeprom(); // Turn off all LEDs
 	kvmpConfig.Device.Port = kvmpConfig.KVM.Port = kvmpConfig.Usb.Port = kvmpConfig.Audio.Port = ledNumber; // Update kvmpConfig to reflect the port change
-	///port_config_report(ALL, illuminationTime); // Report port or focus configuration on OLED screen (with auto-clear)
+	port_config_report(DEVICE, illuminationTime); // Report port configuration on OLED screen (with auto-clear)
 	
 	///oled_blit_P(raspi32x32, 32, 32, 48, 16, illuminationTime);
 	///oled_blit_P(raspi40x40, 40, 40, 44, 16, illuminationTime);
@@ -742,7 +831,7 @@ static void change_port(int portHotkey, int ledNumber)
 	///oled_blit_P(laptop64x64, 64, 64, 32, 0, illuminationTime);
 	
 	///oled_blit_P(pc32x32, 32, 32, 48, 16, illuminationTime);
-	oled_blit_P(pc64x64, 64, 64, 32, 0, illuminationTime);
+	///oled_blit_P(pc64x64, 64, 64, 32, 0, illuminationTime);
 	
 	// Turn on relevant keypad LEDs to reflect the port change
 	light_led_for(kvmpConfig.Device.Port, kvmpConfig.Device.Color, (uint16_t)illuminationTime); // Turn on keypad LED for selected port for a period of time (they will auto-off)
@@ -849,7 +938,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 			int inputCheck = kvmpConfig.Device.Port + kvmpConfig.KVM.Port + kvmpConfig.Usb.Port + kvmpConfig.Audio.Port;
 			if (inputCheck == -4) {
 				// MacroPad hasn't been used to send port or focus selection input to ATEN CS1924 KVMP switch
-				error_flash(); // Flash error pattern on bigKNOB
+				error_flash(); // Flash error pattern on MacroPad
 			}
 			else {
 				port_config_report(ALL, illuminationTime); // Report port or focus configuration on OLED screen (with auto-clear)
@@ -1008,22 +1097,23 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     return true;
 }
 
+// |-----------------|
+// | Host Sleep/Wake |
+// |-----------------|
+
 // Method run when the host PC suspends (e.g., sleep)
 void suspend_power_down_user(void) {
-    all_leds_off_noeeprom();  // Turn off all LEDs
+    ///rgblight_sethsv_noeeprom(HSV_BLUE); // Turn all LEDs on to Blue (debug)
+	all_leds_off_noeeprom(); // Turn off all LEDs
     oled_off(); // Clear the OLED screen
 }
 // Method run when the host PC resumes (e.g., wakes up)
 void suspend_wakeup_init_user(void) {
-/*     rgblight_enable_noeeprom();                 // re-enable RGB lighting
-    rgblight_mode_noeeprom(RGBLIGHT_MODE_STATIC_LIGHT); // restore desired mode
-    all_leds_off_noeeprom();                    // ensure they start dark */
-	
-	
-	// Turn on all LEDs
-	rgblight_sethsv_noeeprom(HSV_GREEN); 
-	
-	///keyboard_post_init_user();
+	if (oled_off_tok == INVALID_DEFERRED_TOKEN) { // Check if there is no oled_off_tok active
+		keyboard_post_init_user(); // Call method to initialize the MacroPad
+	} /* else {
+		rgblight_sethsv_noeeprom(HSV_RED); // Turn all LEDs on to Red (debug)
+	} */
 }
 
 // ---------------------------------------------------------------------------------------------------------
