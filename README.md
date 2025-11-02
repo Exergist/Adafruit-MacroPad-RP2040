@@ -11,7 +11,7 @@ Jump to the latest release here (LINK!!!).
 <img width="575" height="712" alt="image" src="https://github.com/user-attachments/assets/625c252d-d6e4-4647-9010-c3e3ee2dcb0d" />
 
 ### SuperKvmpSwitch
-Control device for the [ATEN CS1924](https://www.aten.com/us/en/products/kvm/desktop-kvm-switches/cs1924/) 4-port KVMP switch. Jump to the files [here](https://github.com/Exergist/Adafruit-MacroPad-RP2040/tree/main/QMK/SuperDisplaySwitch). 
+Control device for the [ATEN CS1924](https://www.aten.com/us/en/products/kvm/desktop-kvm-switches/cs1924/) 4-port KVMP switch. Jump to the files [here](https://github.com/Exergist/Adafruit-MacroPad-RP2040/tree/main/QMK/SuperKvmpSwitch). 
 <details>
 <summary><b>Keymap</b></summary>
  
