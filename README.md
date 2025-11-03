@@ -93,11 +93,12 @@ Adafruit provides a [comprehensive guide](https://learn.adafruit.com/adafruit-ma
 
  1. Plug the Adafruit MacroPad RP2040 into the computer.
  2. Press and hold down on the encoder, and then press the reset button (located to the left of the OLED screen on the side of the board).
-    [Show image of the MacroPad and highlight the locations of the encoder and reset button]
- 3. The MacroPad should enter bootloader mode and a new device should be available on the computer (???????).
-    [Show image of the new device]
- 5. Drag and drop the desired firmware uf2 file into the (???????) device.
- 6. The MacroPad should auto-restart and launch with the new firmware.
+    
+    <img width="493" height="440" alt="image" src="https://github.com/user-attachments/assets/39ce9909-b5a6-49b1-8311-48b0f20a5684" />
+
+ 3. The MacroPad should enter bootloader mode and a new storage device should be available on the computer called `RPI-RP2`.
+ 4. Drag and drop the desired firmware uf2 file into the RPI-RP2 device.
+ 5. The MacroPad should auto-restart and launch with the new firmware.
 
 </details>
 
