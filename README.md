@@ -96,7 +96,7 @@ Adafruit provides a [comprehensive guide](https://learn.adafruit.com/adafruit-ma
     
     <img width="493" height="440" alt="image" src="https://github.com/user-attachments/assets/39ce9909-b5a6-49b1-8311-48b0f20a5684" />
 
- 3. The MacroPad should enter bootloader mode and a new storage device should be available on the computer called `RPI-RP2`.
+ 3. The MacroPad should enter bootloader mode and a new USB storage device called `RPI-RP2` should be available on the computer.
  4. Drag and drop the desired firmware uf2 file into the RPI-RP2 device.
  5. The MacroPad should auto-restart and launch with the new firmware.
 
