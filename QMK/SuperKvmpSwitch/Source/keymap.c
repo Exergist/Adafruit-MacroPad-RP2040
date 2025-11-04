@@ -1,14 +1,14 @@
 // TODO
-// convert the port numbers on the OLED into useful names (laptop, pi, PC)
-// maybe with each switch element keypress all the (known) selected keys illuminate?
-// maybe look into showing small images on the oled instead of pure text when switching elements?
+// convert the port numbers on the OLED into useful names (laptop, pi, PC) - done
+// maybe with each switch element keypress all the (known) selected keys illuminate? - done
 // get some audio code working just to try it out and have it available (though likely comment it out)
-
+// probably update logic so that when a main port is engaged for all 3 focuses the reporting encoder press shows 1 image (similar when the device port switch happens) - done
 
 /* Copyright (c) 2025 Exergist
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
+of this software and associa1k
+ted documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
@@ -647,10 +647,17 @@ static void port_config_report(PortReportingType type, uint16_t ms)
 	}
 } */
 
+// Helper method to pre-format port information for output on the OLED screen
+static const char *format_port_output(int p, char *buf, size_t n) {
+    if (p < 0) return "?";
+    snprintf(buf, n, "%d", p);
+    return buf;
+}
+
 // Method to output ATEN CS1924 port or focus status via imagery on the OLED screen
 static void port_config_report(PortReportingType type, uint16_t ms)
 {
-	char line1[22]; // Create a buffer
+	char line1[64]; // Create a buffer
 	oled_clear(); // Clear the OLED screen of content
 	
 	switch (type) {
@@ -675,34 +682,39 @@ static void port_config_report(PortReportingType type, uint16_t ms)
 			}
 			break;
 		
-		case KVM:
+		/* case KVM:
 			if (kvmpConfig.KVM.Port != -1) { // Check if the KVM port has been changed
 				snprintf(line1, sizeof(line1), "KVM:%d", kvmpConfig.KVM.Port); // Insert content into line1
 			} else {
 				snprintf(line1, sizeof(line1), "KVM:?"); // Insert content into line1
 			}
 			oled_write_ln(line1, false);  // Write line1 and include newline
-			break;
+			break; */
 		
-		case USBHUB:
+		/* case USBHUB:
 			if (kvmpConfig.Usb.Port != -1) { // Check if the USB hub port has been changed
 				snprintf(line1, sizeof(line1), "USB:%d", kvmpConfig.Usb.Port); // Insert content into line1
 			} else {
 				snprintf(line1, sizeof(line1), "USB:?"); // Insert content into line1
 			}
 			oled_write_ln(line1, false);  // Write line1 and include newline
-			break;
+			break; */
 		
-		case AUDIO:
+		/* case AUDIO:
 			if (kvmpConfig.Audio.Port != -1) { // Check if the audio port has been changed
 				snprintf(line1, sizeof(line1), "Audio:%d", kvmpConfig.Audio.Port); // Insert content into line1
 			} else {
 				snprintf(line1, sizeof(line1), "Audio:?"); // Insert content into line1
 			}
 			oled_write_ln(line1, false);  // Write line1 and include newline
-			break;
+			break; */
 		
 		case ALL:
+			if (kvmpConfig.Device.Port == kvmpConfig.KVM.Port && kvmpConfig.KVM.Port == kvmpConfig.Audio.Port) { // Check if all focus is actually on one device
+				port_config_report(DEVICE, illuminationTime); // Report selected port (device) on OLED screen (with auto-clear)
+				return;
+			}
+			
 			// Write the header
 			oled_set_cursor(0, 0);  // Position the OLED cursor at the top left of the screen
 			snprintf(line1, sizeof(line1), "  KVM    USB    Audio"); // Insert content into line1
@@ -710,7 +722,14 @@ static void port_config_report(PortReportingType type, uint16_t ms)
 			
 			// Write the port number for each device
 			oled_set_cursor(0, 1);  // Position the OLED cursor at the top left of the screen
-			snprintf(line1, sizeof(line1), "   %d      %d       %d", kvmpConfig.KVM.Port, kvmpConfig.Usb.Port, kvmpConfig.Audio.Port); // Insert content into line1
+			char kvm_s[12], usb_s[12], aud_s[12]; 
+			snprintf(line1, sizeof(line1), "   %s      %s       %s",  // Insert content into line1
+				format_port_output(kvmpConfig.KVM.Port,   kvm_s, sizeof kvm_s),
+				format_port_output(kvmpConfig.Usb.Port,   usb_s, sizeof usb_s),
+				format_port_output(kvmpConfig.Audio.Port, aud_s, sizeof aud_s));
+/* 				kvmpConfig.KVM.Port == -1 ? "?" : kvmpConfig.KVM.Port, 
+				kvmpConfig.Usb.Port == -1 ? "?" : kvmpConfig.Usb.Port, 
+				kvmpConfig.Audio.Port == -1 ? "?" : kvmpConfig.Audio.Port);  */
 			oled_write_ln(line1, false);  // Write line1 and include newline
 			
 			// Write the device images
@@ -723,6 +742,21 @@ static void port_config_report(PortReportingType type, uint16_t ms)
 			error_flash(); // Flash error pattern on MacroPad
 			return;
 	}
+	
+	// Light the keys to display the current KVMP focus
+	if (kvmpConfig.Device.Port > 0) {
+		light_led_for(kvmpConfig.Device.Port, kvmpConfig.Device.Color, (uint16_t)illuminationTime); // Turn on keypad LED for selected port for a period of time (they will auto-off)
+	}
+	if (kvmpConfig.KVM.Port > 0) {
+		light_led_for(kvmpConfig.KVM.Port+3, kvmpConfig.KVM.Color, (uint16_t)illuminationTime); // Turn on keypad LED for selected KVM-focused port for a period of time (they will auto-off)
+	}
+	if (kvmpConfig.Usb.Port > 0) {
+		light_led_for(kvmpConfig.Usb.Port+6, kvmpConfig.Usb.Color, (uint16_t)illuminationTime); // Turn on keypad LED for selected USB-focused port for a period of time (they will auto-off)
+	}
+	if (kvmpConfig.Audio.Port > 0) {
+		light_led_for(kvmpConfig.Audio.Port+9, kvmpConfig.Audio.Color, (uint16_t)illuminationTime); // Turn on keypad LED for selected USB-focused port for a period of time (they will auto-off)
+	}
+
 	if (oled_off_tok != INVALID_DEFERRED_TOKEN) { // Check if a valid deferral token already exists
 		extend_deferred_exec(oled_off_tok, ms); // Extend the existing pending execution relative to "now"
 	} else {
@@ -737,11 +771,11 @@ static void change_port(int portHotkey, int ledNumber)
 	kvmpConfig.Device.Port = kvmpConfig.KVM.Port = kvmpConfig.Usb.Port = kvmpConfig.Audio.Port = ledNumber; // Update kvmpConfig to reflect the port change
 	port_config_report(DEVICE, illuminationTime); // Report port configuration on OLED screen (with auto-clear)
 	
-	// Turn on relevant keypad LEDs to reflect the port change
+/* 	// Turn on relevant keypad LEDs to reflect the port change
 	light_led_for(kvmpConfig.Device.Port, kvmpConfig.Device.Color, (uint16_t)illuminationTime); // Turn on keypad LED for selected port for a period of time (they will auto-off)
 	light_led_for(kvmpConfig.KVM.Port+3, kvmpConfig.KVM.Color, (uint16_t)illuminationTime); // Turn on keypad LED for selected KVM-focused port for a period of time (they will auto-off)
 	light_led_for(kvmpConfig.Usb.Port+6, kvmpConfig.Usb.Color, (uint16_t)illuminationTime); // Turn on keypad LED for selected USB-focused port for a period of time (they will auto-off)
-	light_led_for(kvmpConfig.Audio.Port+9, kvmpConfig.Audio.Color, (uint16_t)illuminationTime); // Turn on keypad LED for selected USB-focused port for a period of time (they will auto-off)
+	light_led_for(kvmpConfig.Audio.Port+9, kvmpConfig.Audio.Color, (uint16_t)illuminationTime); // Turn on keypad LED for selected USB-focused port for a period of time (they will auto-off) */
 
 	// Send series of key taps (macro) to focus on target port on the ATEN CS1924 KVMP switch
 	tap_code(KC_SCROLL_LOCK);
@@ -764,8 +798,9 @@ static void change_KVM(uint16_t portHotkey, int ledNumber)
 	else {
 		kvmpConfig.Device.Port = -1; // Update kvmpConfig.Device.Port to indicate that its value is not set
 	}
-	port_config_report(KVM, illuminationTime); // Report port or focus configuration on OLED screen (with auto-clear)
-	light_led_for(ledNumber, kvmpConfig.KVM.Color, (uint16_t)illuminationTime); // Turn on keypad LED for selected KVM-focused port for a period of time (they will auto-off)
+	port_config_report(ALL, illuminationTime); // Report port or focus configuration for all devices on OLED screen (with auto-clear)
+	///port_config_report(KVM, illuminationTime); // Report port or focus configuration on OLED screen (with auto-clear)
+	///light_led_for(ledNumber, kvmpConfig.KVM.Color, (uint16_t)illuminationTime); // Turn on keypad LED for selected KVM-focused port for a period of time (they will auto-off)
 	
 	// Send series of key taps (macro) to direct the ATEN CS1924 KVMP switch's KVM to focus on a target port
 	tap_code(KC_SCROLL_LOCK);
@@ -790,8 +825,9 @@ static void change_usb(uint16_t portHotkey, int ledNumber)
 	else {
 		kvmpConfig.Device.Port = -1; // Update kvmpConfig.Device.Port to indicate that its value is not set
 	}
-	port_config_report(USBHUB, illuminationTime); // Report port or focus configuration on OLED screen (with auto-clear)
-	light_led_for(ledNumber, kvmpConfig.Usb.Color, (uint16_t)illuminationTime); // Turn on keypad LED for selected USB-focused port for a period of time (they will auto-off)	
+	port_config_report(ALL, illuminationTime); // Report port or focus configuration for all devices on OLED screen (with auto-clear)
+	///port_config_report(USBHUB, illuminationTime); // Report port or focus configuration on OLED screen (with auto-clear)
+	///light_led_for(ledNumber, kvmpConfig.Usb.Color, (uint16_t)illuminationTime); // Turn on keypad LED for selected USB-focused port for a period of time (they will auto-off)	
 	
 	// Send series of key taps (macro) to direct the ATEN CS1924 KVMP switch's USB hub to focus on a target port
 	tap_code(KC_SCROLL_LOCK);
@@ -816,8 +852,9 @@ static void change_audio(uint16_t portHotkey, int ledNumber)
 	else {
 		kvmpConfig.Device.Port = -1; // Update kvmpConfig.Device.Port to indicate that its value is not set
 	}
-	port_config_report(AUDIO, illuminationTime); // Report port or focus configuration on OLED screen (with auto-clear)
-	light_led_for(ledNumber, kvmpConfig.Audio.Color, (uint16_t)illuminationTime); // Turn on keypad LED for selected audio-focused port for a period of time (they will auto-off)
+	port_config_report(ALL, illuminationTime); // Report port or focus configuration for all devices on OLED screen (with auto-clear)
+	///port_config_report(AUDIO, illuminationTime); // Report port or focus configuration on OLED screen (with auto-clear)
+	///light_led_for(ledNumber, kvmpConfig.Audio.Color, (uint16_t)illuminationTime); // Turn on keypad LED for selected audio-focused port for a period of time (they will auto-off)
 	
 	// Send series of key taps (macro) to direct the ATEN CS1924 KVMP switch's audio to focus on a target port
 	tap_code(KC_SCROLL_LOCK);
@@ -845,20 +882,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 				error_flash(); // Flash error pattern on MacroPad
 			}
 			else {
-				port_config_report(ALL, illuminationTime); // Report port or focus configuration on OLED screen (with auto-clear)
-				
-				// Light the keys to display the current KVMP focus
-				if (kvmpConfig.Device.Port > 0) {
-					light_led_for(kvmpConfig.Device.Port, kvmpConfig.Device.Color, (uint16_t)illuminationTime); // Turn on keypad LED for selected port for a period of time (they will auto-off)
-				}
-				if (kvmpConfig.KVM.Port > 0) {
-					light_led_for(kvmpConfig.KVM.Port+3, kvmpConfig.KVM.Color, (uint16_t)illuminationTime); // Turn on keypad LED for selected KVM-focused port for a period of time (they will auto-off)
-				}
-				if (kvmpConfig.Usb.Port > 0) {
-					light_led_for(kvmpConfig.Usb.Port+6, kvmpConfig.Usb.Color, (uint16_t)illuminationTime); // Turn on keypad LED for selected USB-focused port for a period of time (they will auto-off)
-				}
-				if (kvmpConfig.Audio.Port > 0) {
-					light_led_for(kvmpConfig.Audio.Port+9, kvmpConfig.Audio.Color, (uint16_t)illuminationTime); // Turn on keypad LED for selected USB-focused port for a period of time (they will auto-off)
+				if (kvmpConfig.Device.Port == kvmpConfig.KVM.Port && kvmpConfig.KVM.Port == kvmpConfig.Audio.Port) {
+					port_config_report(DEVICE, illuminationTime); // Report selected port (device) on OLED screen (with auto-clear)
+				} else {
+					port_config_report(ALL, illuminationTime); // Report port or focus configuration for all devices on OLED screen (with auto-clear)
 				}
 			}
         } else {
