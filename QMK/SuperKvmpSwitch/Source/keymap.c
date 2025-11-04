@@ -1,8 +1,5 @@
 // TODO
-// convert the port numbers on the OLED into useful names (laptop, pi, PC) - done
-// maybe with each switch element keypress all the (known) selected keys illuminate? - done
 // get some audio code working just to try it out and have it available (though likely comment it out)
-// probably update logic so that when a main port is engaged for all 3 focuses the reporting encoder press shows 1 image (similar when the device port switch happens) - done
 
 /* Copyright (c) 2025 Exergist
 
@@ -38,7 +35,7 @@ SOFTWARE.
 // 																	SUPER KVMP SWITCH
 */
  
- // *************
+// *************
 // *  SUMMARY  *
 // *************
 
@@ -93,7 +90,6 @@ enum customKeycodes
 
 typedef struct { int Port; HSV Color; } KvmpPort;
 typedef struct { KvmpPort Device; KvmpPort KVM; KvmpPort Usb; KvmpPort Audio; } KvmpConfig;
-
 typedef enum { DEVICE, KVM, USBHUB, AUDIO, ALL } PortReportingType;
 
 // **********************
@@ -211,7 +207,6 @@ static uint32_t oled_off_cb(uint32_t trigger_time, void *cb_arg) {
 	w = width in pixels; h = height in pixels
 	x = column (0..127) and is calculated by: (centered) x = (128-w)/2; y = row in pixels, but MUST be a multiple of 8 for this simple version */
 static void oled_blit_P(const uint8_t *img, uint8_t w, uint8_t h, uint8_t x, uint8_t y, uint16_t ms) {
-    ///oled_clear(); // Clear OLED screen
 	uint8_t pages = (h + 7) / 8;                 // how many 8-px pages the image spans
     uint16_t base  = (y / 8) * OLED_DISPLAY_WIDTH + x;       // starting byte address in display RAM
 
@@ -727,9 +722,6 @@ static void port_config_report(PortReportingType type, uint16_t ms)
 				format_port_output(kvmpConfig.KVM.Port,   kvm_s, sizeof kvm_s),
 				format_port_output(kvmpConfig.Usb.Port,   usb_s, sizeof usb_s),
 				format_port_output(kvmpConfig.Audio.Port, aud_s, sizeof aud_s));
-/* 				kvmpConfig.KVM.Port == -1 ? "?" : kvmpConfig.KVM.Port, 
-				kvmpConfig.Usb.Port == -1 ? "?" : kvmpConfig.Usb.Port, 
-				kvmpConfig.Audio.Port == -1 ? "?" : kvmpConfig.Audio.Port);  */
 			oled_write_ln(line1, false);  // Write line1 and include newline
 			
 			// Write the device images
@@ -771,12 +763,6 @@ static void change_port(int portHotkey, int ledNumber)
 	kvmpConfig.Device.Port = kvmpConfig.KVM.Port = kvmpConfig.Usb.Port = kvmpConfig.Audio.Port = ledNumber; // Update kvmpConfig to reflect the port change
 	port_config_report(DEVICE, illuminationTime); // Report port configuration on OLED screen (with auto-clear)
 	
-/* 	// Turn on relevant keypad LEDs to reflect the port change
-	light_led_for(kvmpConfig.Device.Port, kvmpConfig.Device.Color, (uint16_t)illuminationTime); // Turn on keypad LED for selected port for a period of time (they will auto-off)
-	light_led_for(kvmpConfig.KVM.Port+3, kvmpConfig.KVM.Color, (uint16_t)illuminationTime); // Turn on keypad LED for selected KVM-focused port for a period of time (they will auto-off)
-	light_led_for(kvmpConfig.Usb.Port+6, kvmpConfig.Usb.Color, (uint16_t)illuminationTime); // Turn on keypad LED for selected USB-focused port for a period of time (they will auto-off)
-	light_led_for(kvmpConfig.Audio.Port+9, kvmpConfig.Audio.Color, (uint16_t)illuminationTime); // Turn on keypad LED for selected USB-focused port for a period of time (they will auto-off) */
-
 	// Send series of key taps (macro) to focus on target port on the ATEN CS1924 KVMP switch
 	tap_code(KC_SCROLL_LOCK);
 	wait_ms(80);
@@ -1051,37 +1037,3 @@ void suspend_wakeup_init_user(void) {
 // ---------------------------------------------------------------------------------------------------------
 // ARCHIVE
 // ---------------------------------------------------------------------------------------------------------
-
-/* // Method for writing integer debug content to the OLED screen
-static void oled_debug_int(int input)
-{
-	oled_clear();
-	oled_set_cursor(2, 1);
-	///char buf[8];  // plenty for -32768..32767
-	char line[24];
-	///snprintf(buf, sizeof(buf), "%d", kvmpConfig.KVM.Port);
-	snprintf(line, sizeof(line), "KVM:%d USB:%d Aud:%d", kvmpConfig.KVM.Port, kvmpConfig.Usb.Port, kvmpConfig.Audio.Port);
-	oled_write(line, false);  // write without newline
-} */
-
-/* // Method for writing string debug content to the OLED screen
-static void oled_debug_string(const char *input)
-{
-	oled_clear(); // Clear the OLED screen of content
-	oled_set_cursor(2, 1); // Position the OLED cursor (21 columns × 8 rows on 128×64 OLED screen)
-	oled_write(input, false); // Write input to the OLED screen at the cursor location
-} */
-
-	///oled_blit_P(raspi32x32, 32, 32, 48, 16, illuminationTime);
-	///oled_blit_P(raspi40x40, 40, 40, 44, 16, illuminationTime);
-	///oled_blit_P(raspi48x48, 48, 48, 40, 16, illuminationTime);
-	///oled_blit_P(raspi56x56, 56, 56, 36, 8, illuminationTime);
-	
-	///oled_blit_P(raspi32x32, 32, 32, 48, 16, illuminationTime);
-	///oled_blit_P(raspi64x64, 64, 64, 32, 0, illuminationTime);
-	
-	///oled_blit_P(laptop32x32, 32, 32, 48, 16, illuminationTime);
-	///oled_blit_P(laptop64x64, 64, 64, 32, 0, illuminationTime);
-	
-	///oled_blit_P(pc32x32, 32, 32, 48, 16, illuminationTime);
-	///oled_blit_P(pc64x64, 64, 64, 32, 0, illuminationTime);
