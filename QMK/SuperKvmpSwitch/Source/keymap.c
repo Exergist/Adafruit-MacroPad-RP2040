@@ -1,5 +1,5 @@
 // TODO
-// get some audio code working just to try it out and have it available (though likely comment it out)
+
 
 /* Copyright (c) 2025 Exergist
 
@@ -179,11 +179,13 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 // | Encoder Rotation |
 // |------------------|
 
+#ifdef ENCODER_MAP_ENABLE
+
 // Defines the behavior for encoder rotation across all applicable layers
-#if defined(ENCODER_MAP_ENABLE)
 const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
     [0] = { ENCODER_CCW_CW(KC_VOLD, KC_VOLU) } // Format = Counter-clockwise action, clockwise action
 };
+
 #endif
 
 // ***********************
@@ -480,6 +482,17 @@ static void render_qmk_logo(void) {
 
 #endif
 
+// |-------|
+// | Audio |
+// |-------|
+
+#ifdef AUDIO_ENABLE
+
+///static float startup_song[][2] = SONG(STARTUP_SOUND);
+///static float goodbye_song[][2] = SONG(GOODBYE_SOUND);
+
+#endif
+
 // |----------------|
 // | Initialization |
 // |----------------|
@@ -515,11 +528,16 @@ void keyboard_post_init_user(void) {
 
 	// Position the OLED cursor (21 columns × 8 rows on 128×64 OLED screen)
 	oled_set_cursor(0, 2);
+	
+	/* // Play a startup audio song
+	PLAY_SONG(startup_song); */
 }
 
 // |---------------|
 // | MacroPad LEDs |
 // |---------------|
+
+#ifdef RGBLIGHT_ENABLE
 
 // Turn off one LED when the timer fires
 static uint32_t led_off_cb(uint32_t trigger_time, void *cb_arg) {
@@ -566,6 +584,8 @@ static void error_flash(void)
 		timer += (timeStep * 2); // Increment the flash timer
 	}
 }
+
+#endif
 
 // |----------------------------|
 // | ATEN CS1924 KVMP Switching |
@@ -854,6 +874,10 @@ static void change_audio(uint16_t portHotkey, int ledNumber)
 	tap_code(KC_ENTER);
 }
 
+// |----------------------|
+// | Key Press Processing |
+// |----------------------|
+
 // Method run whenever a key is pressed or released
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 	uint16_t portHotkey = 0;
@@ -1023,6 +1047,9 @@ void suspend_power_down_user(void) {
     ///rgblight_sethsv_noeeprom(HSV_BLUE); // Turn all LEDs on to Blue (debug)
 	all_leds_off_noeeprom(); // Turn off all LEDs
     oled_off(); // Clear the OLED screen
+	
+	/* // Play a shutdown audio song
+	PLAY_SONG(goodbye_song); */
 }
 
 // Method run when the host PC resumes (e.g., wakes up)

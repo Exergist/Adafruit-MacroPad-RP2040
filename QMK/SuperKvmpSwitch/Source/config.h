@@ -47,7 +47,7 @@
 #define AUDIO_PWM_DRIVER PWMD0
 #define AUDIO_PWM_CHANNEL RP2040_PWM_CHANNEL_A
 #define AUDIO_INIT_DELAY
-#define AUDIO_CLICKY
+///#define AUDIO_CLICKY
 
 // USB Device descriptor parameters
 //#define VENDOR_ID       0x239A
@@ -61,12 +61,9 @@
 
 ///#define TAPPING_TERM 250 // Speed for double-tap
 
-///define ENCODER_RESOLUTION 4 // Original default was 2, however a value of 4 works better
-
 // RGB LEDs are ws2812
 #define RGB_DI_PIN GP0
 #define RGBLIGHT_DEFAULT_VAL 0 // Set default value (brightness) for LEDs
 #define RGBLIGHT_LIMIT_VAL 128 // Set max value (brightness) for LEDs (max limit is 255 or RGBLIGHT_LIMIT_VAL)
 #define RGBLIGHT_SLEEP // RGB lighting will be switched off when the host goes to sleep
-#define RGBLIGHT_LED_COUNT 12
-//#define RGB_MATRIX_LED_COUNT 12
+#define RGBLIGHT_LED_COUNT 12 // Define the number of keys with LED backlights
