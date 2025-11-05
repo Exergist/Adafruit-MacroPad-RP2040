@@ -15,23 +15,23 @@ Control device for the [ATEN CS1924](https://www.aten.com/us/en/products/kvm/des
 <details>
 <summary><b>Keymap</b></summary>
  
-  * OLED Screen = WIP
+ * OLED Screen = Displays information about CS1924 KVMP's current configuration
  * Encoder
-   * Single-Tap = Illuminate keys corresponding to the CS1924 KVMP's current configuration
+   * Single-Tap = PORT_CHECK = Illuminate keys corresponding to the CS1924 KVMP's current configuration
    * Clockwise Rotation = Volume Up
    * Counter-Clockwise Rotation = Volume Down
- * Button 1 = WIP
- * Button 2 = WIP
- * Button 3 = WIP
- * Button 4 = WIP
- * Button 5 = WIP
- * Button 6 = WIP
- * Button 7 = WIP
- * Button 8 = WIP
- * Button 9 = WIP
- * Button 10 = WIP
- * Button 11 = WIP
- * Button 12 = WIP
+ * Button1 = PORT_1 = Change to port 1 on the CS1924 switch
+ * Button2 = PORT_2 = Change to port 2 on the CS1924 switch
+ * Button3 = PORT_3 = Change to port 3 on the CS1924 switch
+ * Button4 = KVM_1 = Change KVM focus on the CS1924 switch to port 1
+ * Button5 = KVM_2 = Change KVM focus on the CS1924 switch to port 2
+ * Button6 = KVM_3 = Change KVM focus on the CS1924 switch to port 3
+ * Button7 = USB_1 = Change USB hub focus on the CS1924 switch to port 1
+ * Button8 = USB_2 = Change USB hub focus on the CS1924 switch to port 2
+ * Button9 = USB_3 = Change USB hub focus on the CS1924 switch to port 3
+ * Button10 = AUDIO_1 = Change Audio focus on the CS1924 switch to port 1
+ * Button11 = AUDIO_2 = Change Audio focus on the CS1924 switch to port 2
+ * Button12 = AUDIO_3 = Change Audio focus on the CS1924 switch to port 3
 </details>
 
 ## How to Build and Install the Firmware?
