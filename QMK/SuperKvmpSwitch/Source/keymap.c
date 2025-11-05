@@ -1,6 +1,3 @@
-// TODO
-// keep working on massaging the keycode macro sequence and wait/delay timing to minimize slowdown of the OLED
-
 /* Copyright (c) 2025 Exergist
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -41,12 +38,13 @@ SOFTWARE.
 
 // Custom keymap for MacroPad RP2040 by Exergist (2025)
 // Functionality includes:
-//   • STUFF
-//   • STUFF
-//   • STUFF
-//   • STUFF
-//   • STUFF
- 
+//   • Hotkey control of ATEN CS1924 KVMP switch (port select, KVM-only, USB-only, audio-only, status check)
+//   • OLED UI with device/port status and icons (fast, pixel-accurate blits; page-aligned)
+//   • RGB key lighting as visual feedback for current state
+//   • Timed auto-off for OLED and LEDs using deferred callbacks
+//   • Rotary encoder mapped to system volume
+//   • Sleep/wake handling to clear/re-init OLED and LEDs
+
 // **********************
 // *  ACKNOWLEDGEMENTS  *
 // **********************
@@ -97,6 +95,7 @@ typedef enum { DEVICE, KVM, USBHUB, AUDIO, ALL } PortReportingType;
 // **********************
 
 int illuminationTime = 2000; // Time in milliseconds to illuminate LEDs and OLED screen
+int keyPressDelay = 20; // Time in milliseconds to wait between virtually releasing a pressed (tapped) key
 static deferred_token led_off_tok[RGBLIGHT_LED_COUNT]; // One deferred token per LED
 static deferred_token oled_off_tok; // One deferred token for the OLED screen
 
@@ -200,8 +199,8 @@ const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
 
 // Clear the OLED screen when timer fires
 static uint32_t oled_off_cb(uint32_t trigger_time, void *cb_arg) {
-	oled_clear();
-	oled_off_tok = INVALID_DEFERRED_TOKEN;
+	oled_clear(); // Clear the OLED screen
+	oled_off_tok = INVALID_DEFERRED_TOKEN; // Reset the OLED screen deferral token
 	return 0;
 }
 
@@ -526,16 +525,15 @@ static void render_qmk_logo(void) {
 
 // Turn off LEDs and clear OLED after the boot splash
 static uint32_t boot_effects_off_cb(uint32_t trigger_time, void *cb_arg) {
-    // LEDs off and clear any deferral tokens
+    // Turn LEDs off and clear any deferral tokens
     for (uint8_t i = 0; i < RGBLIGHT_LED_COUNT; i++) {
         rgblight_sethsv_at(0, 0, 0, i);
         led_off_tok[i] = INVALID_DEFERRED_TOKEN;
     }
 	
-    // OLED off (clear the logo)
-    oled_clear(); 
-    oled_off_tok = INVALID_DEFERRED_TOKEN;
-    return 0;  // don't reschedule
+    oled_clear(); // Clear the OLED screen
+    oled_off_tok = INVALID_DEFERRED_TOKEN; // Reset the OLED screen deferral token
+    return 0;  // Don't reschedule
 }
 
 // Method run as the very last task in the keyboard initialization process
@@ -568,9 +566,9 @@ void keyboard_post_init_user(void) {
 
 // Turn off one LED when the timer fires
 static uint32_t led_off_cb(uint32_t trigger_time, void *cb_arg) {
-    uint8_t idx = (uint8_t)(uintptr_t)cb_arg;
-    rgblight_sethsv_at(0, 0, 0, idx);
-    led_off_tok[idx] = INVALID_DEFERRED_TOKEN;
+    uint8_t idx = (uint8_t)(uintptr_t)cb_arg; // Get the ID of the triggering key
+    rgblight_sethsv_at(0, 0, 0, idx); // Turn of the LED of the triggering key
+    led_off_tok[idx] = INVALID_DEFERRED_TOKEN; // Reset the deferral token for the triggering key's LED
     return 0; // Don't reschedule
 }
 
@@ -620,9 +618,9 @@ static void error_flash(void)
 
 // Helper method to pre-format port information for output on the OLED screen
 static const char *format_port_output(int p, char *buf, size_t n) {
-    if (p < 0) return "?";
-    snprintf(buf, n, "%d", p);
-    return buf;
+    if (p < 0) return "?"; // Check if the port number p is less than 0 (and if so return "?")
+    snprintf(buf, n, "%d", p); // Store the port number p in buf
+    return buf; // Return buf
 }
 
 // Method to output ATEN CS1924 port or focus status via imagery on the OLED screen and key backlights
@@ -636,9 +634,9 @@ static void port_config_report(PortReportingType type, uint16_t ms)
 			if (kvmpConfig.Device.Port != -1) { // Check if the device port has been changed
 				if (kvmpConfig.Device.Port == 1) { // Check if port 1 is active
 					oled_blit_P(laptop64x64, 64, 64, 32, 0, illuminationTime); // Show laptop image on OLED screen
-				} else if (kvmpConfig.Device.Port == 2) {
+				} else if (kvmpConfig.Device.Port == 2) { // Check if port 2 is active
 					oled_blit_P(raspi64x64, 64, 64, 32, 0, illuminationTime); // Show Raspberry Pi image on OLED screen
-				} else if (kvmpConfig.Device.Port == 3) {
+				} else if (kvmpConfig.Device.Port == 3) { // Check if port 3 is active
 					oled_blit_P(pc64x64, 64, 64, 32, 0, illuminationTime); // Show PC image on OLED screen
 				} else {
 					error_flash(); // Flash error pattern on MacroPad
@@ -732,77 +730,6 @@ static void port_config_report(PortReportingType type, uint16_t ms)
 	}
 }
 
-/* // Method to output ATEN CS1924 port or focus status via text information on the OLED screen
-static void port_config_report(PortReportingType type, uint16_t ms)
-{
-	char line1[16]; // Create a buffer
-	oled_clear(); // Clear the OLED screen of content
-	
-	switch (type) {
-		case DEVICE:
-			if (kvmpConfig.Device.Port != -1) { // Check if the device port has been changed
-				snprintf(line1, sizeof(line1), "Port:%d", kvmpConfig.Device.Port); // Insert content into line1
-			} else {
-				snprintf(line1, sizeof(line1), "Port:?"); // Insert content into line1
-			}
-			oled_write_ln(line1, false);  // Write line1 and include newline
-			break;
-		
-		case KVM:
-			if (kvmpConfig.KVM.Port != -1) { // Check if the KVM port has been changed
-				snprintf(line1, sizeof(line1), "KVM:%d", kvmpConfig.KVM.Port); // Insert content into line1
-			} else {
-				snprintf(line1, sizeof(line1), "KVM:?"); // Insert content into line1
-			}
-			oled_write_ln(line1, false);  // Write line1 and include newline
-			break;
-		
-		case USBHUB:
-			if (kvmpConfig.Usb.Port != -1) { // Check if the USB hub port has been changed
-				snprintf(line1, sizeof(line1), "USB:%d", kvmpConfig.Usb.Port); // Insert content into line1
-			} else {
-				snprintf(line1, sizeof(line1), "USB:?"); // Insert content into line1
-			}
-			oled_write_ln(line1, false);  // Write line1 and include newline
-			break;
-		
-		case AUDIO:
-			if (kvmpConfig.Audio.Port != -1) { // Check if the audio port has been changed
-				snprintf(line1, sizeof(line1), "Audio:%d", kvmpConfig.Audio.Port); // Insert content into line1
-			} else {
-				snprintf(line1, sizeof(line1), "Audio:?"); // Insert content into line1
-			}
-			oled_write_ln(line1, false);  // Write line1 and include newline
-			break;
-		
-		case ALL:
-			char line2[40], dvcStr[8], kvmStr[8], usbStr[8], audStr[8]; // Create buffers
-			
-			// Preprocess to format each value for possible insertion of "?"
-			snprintf(dvcStr, sizeof(dvcStr), "%s",  kvmpConfig.Device.Port   == -1 ? "?" : "");
-			snprintf(kvmStr, sizeof(kvmStr), "%s",  kvmpConfig.KVM.Port   == -1 ? "?" : "");
-			snprintf(usbStr, sizeof(usbStr), "%s",  kvmpConfig.Usb.Port   == -1 ? "?" : "");
-			snprintf(audStr, sizeof(audStr), "%s",  kvmpConfig.Audio.Port == -1 ? "?" : "");
-			
-			// Replace empty strings with actual port numbers
-			if (dvcStr[0] == '\0') snprintf(dvcStr, sizeof(dvcStr), "%d", kvmpConfig.Device.Port);
-			if (kvmStr[0] == '\0') snprintf(kvmStr, sizeof(kvmStr), "%d", kvmpConfig.KVM.Port);
-			if (usbStr[0] == '\0') snprintf(usbStr, sizeof(usbStr), "%d", kvmpConfig.Usb.Port);
-			if (audStr[0] == '\0') snprintf(audStr, sizeof(audStr), "%d", kvmpConfig.Audio.Port);
-
-			snprintf(line1, sizeof(line1), "Port:%s", dvcStr); // Insert content into line1
-			snprintf(line2, sizeof(line2), "KVM:%s USB:%s Audio:%s", kvmStr, usbStr, audStr); // Insert content into line2
-			oled_write_ln(line1, false);  // Write line1 to the OLED screen and include newline
-			oled_write_ln(line2, false);  // Write line2 to the OLED screen and include newline
-			break;
-	}
-	if (oled_off_tok != INVALID_DEFERRED_TOKEN) { // Check if a valid deferral token already exists
-		extend_deferred_exec(oled_off_tok, ms); // Extend the existing pending execution relative to "now"
-	} else {
-		oled_off_tok = defer_exec(ms, oled_off_cb, NULL); // Schedule a fresh deferral
-	}
-} */
-
 // Method to change ports on the ATEN CS1924 KVMP switch
 static void change_port(int portHotkey, int ledNumber)
 {
@@ -811,12 +738,9 @@ static void change_port(int portHotkey, int ledNumber)
 	port_config_report(DEVICE, illuminationTime); // Report port configuration on OLED screen (with auto-clear)
 	
 	// Send series of key taps (macro) to focus on target port on the ATEN CS1924 KVMP switch
-	tap_code(KC_SCROLL_LOCK);
-	wait_ms(80);
-	tap_code(KC_SCROLL_LOCK);
-	wait_ms(80);
-	tap_code(portHotkey); // Send the keycode corresponding to the target port number
-	wait_ms(80);
+	tap_code_delay(KC_SCROLL_LOCK, keyPressDelay);
+	tap_code_delay(KC_SCROLL_LOCK, keyPressDelay);
+	tap_code_delay(portHotkey, keyPressDelay); // Send the keycode corresponding to the target port number
 	tap_code(KC_ENTER);
 }
 
@@ -836,14 +760,10 @@ static void change_KVM(uint16_t portHotkey, int ledNumber)
 	///light_led_for(ledNumber, kvmpConfig.KVM.Color, (uint16_t)illuminationTime); // Turn on keypad LED for selected KVM-focused port for a period of time (they will auto-off)
 	
 	// Send series of key taps (macro) to direct the ATEN CS1924 KVMP switch's KVM to focus on a target port
-	tap_code(KC_SCROLL_LOCK);
-	wait_ms(80);
-	tap_code(KC_SCROLL_LOCK);
-	wait_ms(80);
-	tap_code(portHotkey); // Send the keycode corresponding to the target port number
-	wait_ms(80);
-	tap_code(KC_K); // Send modifier keycode to trigger a switch in the KVM only
-	wait_ms(80);
+	tap_code_delay(KC_SCROLL_LOCK, keyPressDelay);
+	tap_code_delay(KC_SCROLL_LOCK, keyPressDelay);
+	tap_code_delay(portHotkey, keyPressDelay); // Send the keycode corresponding to the target port number
+	tap_code_delay(KC_K, keyPressDelay); // Send modifier keycode to trigger a switch in the KVM only
 	tap_code(KC_ENTER);
 }
 
@@ -862,29 +782,12 @@ static void change_usb(uint16_t portHotkey, int ledNumber)
 	///port_config_report(USBHUB, illuminationTime); // Report port or focus configuration on OLED screen (with auto-clear)
 	///light_led_for(ledNumber, kvmpConfig.Usb.Color, (uint16_t)illuminationTime); // Turn on keypad LED for selected USB-focused port for a period of time (they will auto-off)	
 	
-/* 	// Send series of key taps (macro) to direct the ATEN CS1924 KVMP switch's USB hub to focus on a target port
-	tap_code(KC_SCROLL_LOCK);
-	wait_ms(80);
-	tap_code(KC_SCROLL_LOCK);
-	wait_ms(80);
-	tap_code(portHotkey); // Send the keycode corresponding to the target port number
-	wait_ms(80);
-	tap_code(KC_U); // Send modifier keycode to trigger a switch in the USB hub only
-	wait_ms(80);
-	tap_code(KC_ENTER); */
-	
-	tap_code_delay(KC_SCROLL_LOCK, 40);
-	tap_code_delay(KC_SCROLL_LOCK, 40);
-	tap_code_delay(portHotkey, 20);
-	tap_code_delay(KC_U, 20);
+	// Send series of key taps (macro) to direct the ATEN CS1924 KVMP switch's USB hub to focus on a target port
+	tap_code_delay(KC_SCROLL_LOCK, keyPressDelay);
+	tap_code_delay(KC_SCROLL_LOCK, keyPressDelay);
+	tap_code_delay(portHotkey, keyPressDelay); // Send the keycode corresponding to the target port number
+	tap_code_delay(KC_U, keyPressDelay); // Send modifier keycode to trigger a switch in the USB hub only
 	tap_code(KC_ENTER);
-	///tap_code_delay(KC_ENTER, 80);
-	
-/* 	tap_code(KC_SCROLL_LOCK);
-	tap_code(KC_SCROLL_LOCK);
-	tap_code(portHotkey);
-	tap_code(KC_U);
-	tap_code(KC_ENTER); */
 }
 
 // Method to change only the audio focus on the ATEN CS1924 KVMP switch to target port
@@ -902,16 +805,12 @@ static void change_audio(uint16_t portHotkey, int ledNumber)
 	///port_config_report(AUDIO, illuminationTime); // Report port or focus configuration on OLED screen (with auto-clear)
 	///light_led_for(ledNumber, kvmpConfig.Audio.Color, (uint16_t)illuminationTime); // Turn on keypad LED for selected audio-focused port for a period of time (they will auto-off)
 	
-/* 	// Send series of key taps (macro) to direct the ATEN CS1924 KVMP switch's audio to focus on a target port
-	tap_code(KC_SCROLL_LOCK);
-	wait_ms(80);
-	tap_code(KC_SCROLL_LOCK);
-	wait_ms(80);
-	tap_code(portHotkey); // Send the keycode corresponding to the target port number
-	wait_ms(80);
-	tap_code(KC_S); // Send modifier keycode to trigger a switch in the audio only
-	wait_ms(80);
-	tap_code(KC_ENTER); */
+	// Send series of key taps (macro) to direct the ATEN CS1924 KVMP switch's audio to focus on a target port
+	tap_code_delay(KC_SCROLL_LOCK, keyPressDelay);
+	tap_code_delay(KC_SCROLL_LOCK, keyPressDelay);
+	tap_code_delay(portHotkey, keyPressDelay); // Send the keycode corresponding to the target port number
+	tap_code_delay(KC_S, keyPressDelay); // Send modifier keycode to trigger a switch in the audio only
+	tap_code(KC_ENTER);
 }
 
 // |----------------------|
@@ -932,7 +831,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 				error_flash(); // Flash error pattern on MacroPad
 			}
 			else {
-				if (kvmpConfig.Device.Port == kvmpConfig.KVM.Port && kvmpConfig.KVM.Port == kvmpConfig.Audio.Port) {
+				if (kvmpConfig.Device.Port == kvmpConfig.KVM.Port && kvmpConfig.KVM.Port == kvmpConfig.Audio.Port) { // Check if KVM, USB, and Audio focus on the ATEN CS1924 KVMP switch are all on the same port
 					port_config_report(DEVICE, illuminationTime); // Report selected port (device) on OLED screen (with auto-clear)
 				} else {
 					port_config_report(ALL, illuminationTime); // Report port or focus configuration for all devices on OLED screen (with auto-clear)
@@ -945,34 +844,34 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 		
     case PORT_1:
         if (record->event.pressed) {
-            // When keycode MACRO_1 is pressed
+            // When keycode PORT_1 is pressed
 			portHotkey = KC_1; // Store target portHotkey
 			ledNumber = 1; // Store LED number corresponding to pressed key
 			change_port(portHotkey, ledNumber); // Call method to change ports on the ATEN CS1924 KVMP switch
         } else {
-            // When keycode MACRO_1 is released
+            // When keycode PORT_1 is released
         }
         break;
 
     case PORT_2:
         if (record->event.pressed) {
-            // When keycode MACRO_2 is pressed
+            // When keycode PORT_2 is pressed
 			portHotkey = KC_2; // Store target portHotkey
 			ledNumber = 2; // Store LED number corresponding to pressed key
 			change_port(portHotkey, ledNumber); // Call method to change ports on the ATEN CS1924 KVMP switch
         } else {
-            // When keycode MACRO_2 is released
+            // When keycode PORT_2 is released
         }
         break;
 		
     case PORT_3:
         if (record->event.pressed) {
-            // When keycode MACRO_3 is pressed
+            // When keycode PORT_3 is pressed
 			portHotkey = KC_3; // Store target portHotkey
 			ledNumber = 3; // Store LED number corresponding to pressed key
 			change_port(portHotkey, ledNumber); // Call method to change ports on the ATEN CS1924 KVMP switch
         } else {
-            // When keycode MACRO_3 is released
+            // When keycode PORT_3 is released
         }
         break;
 		
@@ -1102,5 +1001,78 @@ void suspend_wakeup_init_user(void) {
 }
 
 // ---------------------------------------------------------------------------------------------------------
-// ARCHIVE
-// ---------------------------------------------------------------------------------------------------------
+
+// *************
+// *  ARCHIVE  *
+// *************
+
+/* // Method to output ATEN CS1924 port or focus status via text information on the OLED screen
+static void port_config_report(PortReportingType type, uint16_t ms)
+{
+	char line1[16]; // Create a buffer
+	oled_clear(); // Clear the OLED screen of content
+	
+	switch (type) {
+		case DEVICE:
+			if (kvmpConfig.Device.Port != -1) { // Check if the device port has been changed
+				snprintf(line1, sizeof(line1), "Port:%d", kvmpConfig.Device.Port); // Insert content into line1
+			} else {
+				snprintf(line1, sizeof(line1), "Port:?"); // Insert content into line1
+			}
+			oled_write_ln(line1, false);  // Write line1 and include newline
+			break;
+		
+		case KVM:
+			if (kvmpConfig.KVM.Port != -1) { // Check if the KVM port has been changed
+				snprintf(line1, sizeof(line1), "KVM:%d", kvmpConfig.KVM.Port); // Insert content into line1
+			} else {
+				snprintf(line1, sizeof(line1), "KVM:?"); // Insert content into line1
+			}
+			oled_write_ln(line1, false);  // Write line1 and include newline
+			break;
+		
+		case USBHUB:
+			if (kvmpConfig.Usb.Port != -1) { // Check if the USB hub port has been changed
+				snprintf(line1, sizeof(line1), "USB:%d", kvmpConfig.Usb.Port); // Insert content into line1
+			} else {
+				snprintf(line1, sizeof(line1), "USB:?"); // Insert content into line1
+			}
+			oled_write_ln(line1, false);  // Write line1 and include newline
+			break;
+		
+		case AUDIO:
+			if (kvmpConfig.Audio.Port != -1) { // Check if the audio port has been changed
+				snprintf(line1, sizeof(line1), "Audio:%d", kvmpConfig.Audio.Port); // Insert content into line1
+			} else {
+				snprintf(line1, sizeof(line1), "Audio:?"); // Insert content into line1
+			}
+			oled_write_ln(line1, false);  // Write line1 and include newline
+			break;
+		
+		case ALL:
+			char line2[40], dvcStr[8], kvmStr[8], usbStr[8], audStr[8]; // Create buffers
+			
+			// Preprocess to format each value for possible insertion of "?"
+			snprintf(dvcStr, sizeof(dvcStr), "%s",  kvmpConfig.Device.Port   == -1 ? "?" : "");
+			snprintf(kvmStr, sizeof(kvmStr), "%s",  kvmpConfig.KVM.Port   == -1 ? "?" : "");
+			snprintf(usbStr, sizeof(usbStr), "%s",  kvmpConfig.Usb.Port   == -1 ? "?" : "");
+			snprintf(audStr, sizeof(audStr), "%s",  kvmpConfig.Audio.Port == -1 ? "?" : "");
+			
+			// Replace empty strings with actual port numbers
+			if (dvcStr[0] == '\0') snprintf(dvcStr, sizeof(dvcStr), "%d", kvmpConfig.Device.Port);
+			if (kvmStr[0] == '\0') snprintf(kvmStr, sizeof(kvmStr), "%d", kvmpConfig.KVM.Port);
+			if (usbStr[0] == '\0') snprintf(usbStr, sizeof(usbStr), "%d", kvmpConfig.Usb.Port);
+			if (audStr[0] == '\0') snprintf(audStr, sizeof(audStr), "%d", kvmpConfig.Audio.Port);
+
+			snprintf(line1, sizeof(line1), "Port:%s", dvcStr); // Insert content into line1
+			snprintf(line2, sizeof(line2), "KVM:%s USB:%s Audio:%s", kvmStr, usbStr, audStr); // Insert content into line2
+			oled_write_ln(line1, false);  // Write line1 to the OLED screen and include newline
+			oled_write_ln(line2, false);  // Write line2 to the OLED screen and include newline
+			break;
+	}
+	if (oled_off_tok != INVALID_DEFERRED_TOKEN) { // Check if a valid deferral token already exists
+		extend_deferred_exec(oled_off_tok, ms); // Extend the existing pending execution relative to "now"
+	} else {
+		oled_off_tok = defer_exec(ms, oled_off_cb, NULL); // Schedule a fresh deferral
+	}
+} */
