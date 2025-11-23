@@ -67,6 +67,7 @@ SOFTWARE.
 
 #include QMK_KEYBOARD_H
 #include "deferred_exec.h"
+#include "process_tap_dance.h" 
 
 // ********************************
 // *  CUSTOM KEYCODE DECLARATION  *
@@ -118,6 +119,105 @@ KvmpConfig kvmpConfig = { // Initialize KVMP configuration variable
 
 KmConfig kmConfig = { // Initialize KM configuration variable	
 	.Device = { .Port = -1, .Color = (HSV){HSV_PINK} }
+};
+
+// ************************
+// *  METHOD DECLARATION  *
+// ************************
+
+// Only declared here as needed
+void error_flash(void);
+void port_config_report(PortReportingType type, uint16_t ms);
+void change_KM_port(int portNumber);
+void port_check(void);
+
+// ***************
+// *  TAP DANCE  *
+// ***************
+
+// |------------------------|
+// | Tap Dance Declarations |
+// |------------------------|
+
+// Tap Dance identifier declaration
+enum
+{
+	ENCODER_DANCE
+};
+
+// Tap Dance action type declaration
+typedef enum
+{
+	TD_NONE,
+	TD_UNKNOWN,
+	TD_SINGLE_TAP,
+	TD_SINGLE_HOLD,
+	TD_DOUBLE_TAP
+} td_state_t;
+
+// Tap Dance state information Struct declaration
+typedef struct
+{
+	bool is_press_action;
+	td_state_t state;
+} td_tap_t;
+
+// |-----------------------|
+// | Tap Dance Definitions |
+// |-----------------------|
+
+// Method for retrieving requested Tap Dance state based on user input
+td_state_t CurrentDance(tap_dance_state_t *state)
+{
+    if (state->count == 1) // Single-tap
+	{
+        if (state->interrupted || !state->pressed) // Check if key press was interrupted OR key state is not "pressed" (being held down)
+			return TD_SINGLE_TAP; // Single-tap confirmed
+        else // Key has not been interrupted AND the key is being held
+			return TD_SINGLE_HOLD; // Means the type of tap is actually a "HOLD"
+    }
+	else if (state->count == 2) // Double-tap
+		return TD_DOUBLE_TAP;
+	else
+		return TD_UNKNOWN;
+}
+
+// Create an instance of td_tap_t for the encoder Tap Dance
+static td_tap_t encoderTap_state = {
+    .is_press_action = true,
+    .state = TD_NONE
+};
+
+// Method to run when Tap Dance action finishes
+void EncoderTapFinished(tap_dance_state_t *state, void *user_data)
+{
+    encoderTap_state.state = CurrentDance(state);
+    switch (encoderTap_state.state)
+	{
+		case TD_SINGLE_TAP: {
+			port_check();
+			break;
+		}
+		case TD_SINGLE_HOLD:
+			change_KM_port(2); // Call method to change the CS62KM KM switch port to 2
+			break;
+		case TD_DOUBLE_TAP:
+			// do nothing
+			break;
+		case TD_NONE:
+			// do nothing
+			break;
+		case TD_UNKNOWN:
+			// do nothing
+			break;
+    }
+	encoderTap_state.state = TD_NONE; // Reset encoderTap_state
+}
+
+// Tap Dance action definition
+tap_dance_action_t  tap_dance_actions[] = {
+    [ENCODER_DANCE] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, EncoderTapFinished, NULL)
+	///[ENCODER_DANCE] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, EncoderTapFinished, EncoderTapReset)
 };
 
 // ************
@@ -180,7 +280,7 @@ KmConfig kmConfig = { // Initialize KM configuration variable
 // Defines the behavior for encoder and key presses across all applicable layers
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   [0] = LAYOUT(
-						   PORT_CHECK,
+						   TD(ENCODER_DANCE),
       PORT_1,   PORT_2,    PORT_3,
       KVM_1,    KVM_2,     KVM_3,
       USB_1,    USB_2,     USB_3,
@@ -607,7 +707,7 @@ static void all_leds_off_noeeprom(void) {
 }
 
 // Method for flashing RGB LEDs to alert of an issue or unexpected situation
-static void error_flash(void)
+void error_flash(void)
 {	
 	float timeStep = 125; // Time step for cycling flashing colors (ms)
 	int flashTime = illuminationTime; // Amount of time to flash LEDs (ms)
@@ -631,7 +731,7 @@ static void error_flash(void)
 // |------------------|
 
 // Method to change ports on the ATEN CS62KM KM switch
-static void change_KM_port(int portNumber)
+void change_KM_port(int portNumber)
 {
 	///all_leds_off_noeeprom(); // Turn off all LEDs
 		
@@ -661,7 +761,7 @@ static const char *format_port_output(int p, char *buf, size_t n) {
 }
 
 // Method to output ATEN CS1924 port or focus status via imagery on the OLED screen and key backlights
-static void port_config_report(PortReportingType type, uint16_t ms)
+void port_config_report(PortReportingType type, uint16_t ms)
 {
 	char line1[64]; // Create a buffer
 	oled_clear(); // Clear the OLED screen of content
@@ -860,30 +960,16 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 	uint16_t portHotkey = 0;
 	uint16_t ledNumber = 0;
     switch (keycode) {
-	case PORT_CHECK:
-        if (record->event.pressed) {
-			// When keycode PORT_CHECK is pressed
-			int inputCheck = kvmpConfig.Device.Port + kvmpConfig.KVM.Port + kvmpConfig.Usb.Port + kvmpConfig.Audio.Port;
-			if (inputCheck == -4) {
-				// MacroPad hasn't been used to send port or focus selection input to ATEN CS1924 KVMP switch
-				error_flash(); // Flash error pattern on MacroPad
-			}
-			else {
-				change_KM_port(2);
-				if (kvmpConfig.Device.Port == kvmpConfig.KVM.Port && kvmpConfig.KVM.Port == kvmpConfig.Audio.Port) { // Check if KVM, USB, and Audio focus on the ATEN CS1924 KVMP switch are all on the same port
-					port_config_report(DEVICE, illuminationTime); // Report selected port (device) on OLED screen (with auto-clear)
-				} else {
-					port_config_report(ALL, illuminationTime); // Report port or focus configuration for all devices on OLED screen (with auto-clear)
-				}
-			}
+	/* case PORT_CHECK:
+        if (record->event.pressed) { // When keycode PORT_CHECK is pressed
+			port_check(); // Call method to report current KVMP switch configuration
         } else {
             // When keycode PORT_CHECK is released
         }
-        return true;
+        return true; */
 		
     case PORT_1:
-        if (record->event.pressed) {
-            // When keycode PORT_1 is pressed
+        if (record->event.pressed) { // When keycode PORT_1 is pressed
 			portHotkey = KC_1; // Store target portHotkey
 			ledNumber = 1; // Store LED number corresponding to pressed key
 			change_KM_port(1); // Call method to change ports on the ATEN CS62KM KM switch (if needed)
@@ -894,8 +980,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         break;
 
     case PORT_2:
-        if (record->event.pressed) {
-            // When keycode PORT_2 is pressed
+        if (record->event.pressed) { // When keycode PORT_2 is pressed
 			portHotkey = KC_2; // Store target portHotkey
 			ledNumber = 2; // Store LED number corresponding to pressed key
 			change_KM_port(1); // Call method to change ports on the ATEN CS62KM KM switch (if needed)
@@ -906,8 +991,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         break;
 		
     case PORT_3:
-        if (record->event.pressed) {
-            // When keycode PORT_3 is pressed
+        if (record->event.pressed) { // When keycode PORT_3 is pressed
 			portHotkey = KC_3; // Store target portHotkey
 			ledNumber = 3; // Store LED number corresponding to pressed key
 			change_KM_port(1); // Call method to change ports on the ATEN CS62KM KM switch (if needed)
@@ -918,8 +1002,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         break;
 		
     case KVM_1:
-        if (record->event.pressed) {
-            // When keycode KVM_1 is pressed
+        if (record->event.pressed) { // When keycode KVM_1 is pressed
 			portHotkey = KC_1; // Store target portHotkey
 			ledNumber = 4; // Store LED number corresponding to pressed key
 			change_KM_port(1); // Call method to change ports on the ATEN CS62KM KM switch (if needed)
@@ -930,8 +1013,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         break;
 		
 	case KVM_2:
-        if (record->event.pressed) {
-            // When keycode KVM_2 is pressed
+        if (record->event.pressed) { // When keycode KVM_2 is pressed
 			portHotkey = KC_2; // Store target portHotkey
 			ledNumber = 5; // Store LED number corresponding to pressed key
 			change_KM_port(1); // Call method to change ports on the ATEN CS62KM KM switch (if needed)
@@ -942,8 +1024,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         break;
 		
 	case KVM_3:
-        if (record->event.pressed) {
-            // When keycode KVM_3 is pressed
+        if (record->event.pressed) { // When keycode KVM_3 is pressed
 			portHotkey = KC_3; // Store target portHotkey
 			ledNumber = 6; // Store LED number corresponding to pressed key
 			change_KM_port(1); // Call method to change ports on the ATEN CS62KM KM switch (if needed)
@@ -954,8 +1035,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         break;
 		
 	case USB_1:
-        if (record->event.pressed) {
-            // When keycode USB_1 is pressed
+        if (record->event.pressed) { // When keycode USB_1 is pressed
 			portHotkey = KC_1; // Store target portHotkey
 			ledNumber = 7; // Store LED number corresponding to pressed key
 			change_KM_port(1); // Call method to change ports on the ATEN CS62KM KM switch (if needed)
@@ -966,8 +1046,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         break;
 		
 	case USB_2:
-        if (record->event.pressed) {
-            // When keycode USB_2 is pressed
+        if (record->event.pressed) { // When keycode USB_2 is pressed
 			portHotkey = KC_2; // Store target portHotkey
 			ledNumber = 8; // Store LED number corresponding to pressed key
 			change_KM_port(1); // Call method to change ports on the ATEN CS62KM KM switch (if needed)
@@ -978,8 +1057,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         break;
 		
 	case USB_3:
-        if (record->event.pressed) {
-            // When keycode USB_3 is pressed
+        if (record->event.pressed) { // When keycode USB_3 is pressed
 			portHotkey = KC_3; // Store target portHotkey
 			ledNumber = 9; // Store LED number corresponding to pressed key
 			change_KM_port(1); // Call method to change ports on the ATEN CS62KM KM switch (if needed)
@@ -990,8 +1068,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         break;
 		
 	case AUDIO_1:
-        if (record->event.pressed) {
-            // When keycode AUDIO_1 is pressed
+        if (record->event.pressed) { // When keycode AUDIO_1 is pressed
 			portHotkey = KC_1; // Store target portHotkey
 			ledNumber = 10; // Store LED number corresponding to pressed key
 			change_KM_port(1); // Call method to change ports on the ATEN CS62KM KM switch (if needed)
@@ -1002,8 +1079,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         break;
 		
 	case AUDIO_2:
-        if (record->event.pressed) {
-            // When keycode AUDIO_2 is pressed
+        if (record->event.pressed) { // When keycode AUDIO_2 is pressed
 			portHotkey = KC_2; // Store target portHotkey
 			ledNumber = 11; // Store LED number corresponding to pressed key
 			change_KM_port(1); // Call method to change ports on the ATEN CS62KM KM switch (if needed)
@@ -1014,8 +1090,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         break;
 
 	case AUDIO_3:
-        if (record->event.pressed) {
-            // When keycode AUDIO_3 is pressed
+        if (record->event.pressed) { // When keycode AUDIO_3 is pressed
 			portHotkey = KC_3; // Store target portHotkey
 			ledNumber = 12; // Store LED number corresponding to pressed key
 			change_KM_port(1); // Call method to change ports on the ATEN CS62KM KM switch (if needed)
@@ -1026,6 +1101,22 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         break;
     }
     return true;
+}
+
+// Method for reporting current configuration on the ATEN CS1924 or CS1824 KVMP switch
+void port_check(void) {
+	int inputCheck = kvmpConfig.Device.Port + kvmpConfig.KVM.Port + kvmpConfig.Usb.Port + kvmpConfig.Audio.Port;
+	if (inputCheck == -4) {
+		// MacroPad hasn't been used to send port or focus selection input to ATEN CS1924 KVMP switch
+		error_flash(); // Flash error pattern on MacroPad
+	}
+	else {
+		if (kvmpConfig.Device.Port == kvmpConfig.KVM.Port && kvmpConfig.KVM.Port == kvmpConfig.Audio.Port) { // Check if KVM, USB, and Audio focus on the ATEN CS1924 KVMP switch are all on the same port
+			port_config_report(DEVICE, illuminationTime); // Report selected port (device) on OLED screen (with auto-clear)
+		} else {
+			port_config_report(ALL, illuminationTime); // Report port or focus configuration for all devices on OLED screen (with auto-clear)
+		}
+	}
 }
 
 // |-----------------|

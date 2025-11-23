@@ -59,7 +59,7 @@
 #define RAW_USAGE_PAGE 	  0xFF60 // Raw HID communication
 #define RAW_USAGE_ID 	  0x61 // Raw HID communication
 
-///#define TAPPING_TERM 250 // Speed for double-tap
+#define TAPPING_TERM 250 // Speed for double-tap
 
 // RGB LEDs are ws2812
 #define RGB_DI_PIN GP0
