@@ -1,3 +1,10 @@
+// TODO
+// change references to only CS1924 to mention all 3 switches
+// insert QMK "tap dance" so that holding the top keys manipulates the CS1824 port selection
+// perhaps update the port_config_report so that it reports the state for both CS1924 and CS1824
+// experiment with how to get the encoder working again when attached to the CS62KM, CS1924, and CS1824 at the same time
+
+
 /* Copyright (c) 2025 Exergist
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -87,8 +94,9 @@ enum customKeycodes
 // *  STRUCTURES & ENUMS  *
 // ************************
 
-typedef struct { int Port; HSV Color; } KvmpPort;
-typedef struct { KvmpPort Device; KvmpPort KVM; KvmpPort Usb; KvmpPort Audio; } KvmpConfig;
+typedef struct { int Port; HSV Color; } KvmSwitch;
+typedef struct { KvmSwitch Device; KvmSwitch KVM; KvmSwitch Usb; KvmSwitch Audio; } KvmpConfig;
+typedef struct { KvmSwitch Device; } KmConfig;
 typedef enum { DEVICE, KVM, USBHUB, AUDIO, ALL } PortReportingType;
 
 // **********************
@@ -97,6 +105,7 @@ typedef enum { DEVICE, KVM, USBHUB, AUDIO, ALL } PortReportingType;
 
 int illuminationTime = 2000; // Time in milliseconds to illuminate LEDs and OLED screen
 int keyPressDelay = 20; // Time in milliseconds to wait between virtually releasing a pressed (tapped) key
+///int kmActivePort = 1; // Active port on the ATEN CS62KM
 static deferred_token led_off_tok[RGBLIGHT_LED_COUNT]; // One deferred token per LED
 static deferred_token oled_off_tok; // One deferred token for the OLED screen
 
@@ -105,6 +114,10 @@ KvmpConfig kvmpConfig = { // Initialize KVMP configuration variable
 	.KVM 	= { .Port = -1, .Color = (HSV){HSV_PURPLE} },
     .Usb 	= { .Port = -1, .Color = (HSV){HSV_BLUE} },
     .Audio	= { .Port = -1, .Color = (HSV){HSV_GREEN} }
+};
+
+KmConfig kmConfig = { // Initialize KM configuration variable	
+	.Device = { .Port = -1, .Color = (HSV){HSV_PINK} }
 };
 
 // ************
@@ -613,9 +626,32 @@ static void error_flash(void)
 
 #endif
 
-// |-------------------------------------------|
-// | ATEN CS1924, CS1824, and CS65KM Switching |
-// |-------------------------------------------|
+// |------------------|
+// | CS62KM Switching |
+// |------------------|
+
+// Method to change ports on the ATEN CS62KM KM switch
+static void change_KM_port(int portNumber)
+{
+	///all_leds_off_noeeprom(); // Turn off all LEDs
+		
+	if (kmConfig.Device.Port != portNumber) {
+		kmConfig.Device.Port = portNumber; // Update kmConfig to reflect the port change
+		uint16_t portHotkey = (portNumber == 1 ? KC_1 : KC_2); // Store keycode corresponding to the target port number
+		
+		// Send series of key taps (macro) to focus on target port on the ATEN CS62KM KM switch
+		tap_code_delay(KC_RIGHT_CTRL, keyPressDelay);
+		tap_code_delay(KC_RIGHT_CTRL, keyPressDelay);
+		tap_code_delay(portHotkey, keyPressDelay); // Send the keycode corresponding to the target port number
+		tap_code(KC_ENTER);
+	}
+	
+	///port_config_report(DEVICE, illuminationTime); // Report port configuration on OLED screen (with auto-clear)
+}
+
+// |----------------------------------|
+// | ATEN CS1924 and CS1824 Switching |
+// |----------------------------------|
 
 // Helper method to pre-format port information for output on the OLED screen
 static const char *format_port_output(int p, char *buf, size_t n) {
@@ -731,10 +767,11 @@ static void port_config_report(PortReportingType type, uint16_t ms)
 	}
 }
 
-// Method to change ports on the ATEN CS1924 KVMP switch
-static void change_port(int portHotkey, int ledNumber)
+// Method to change ports on the ATEN CS1924 or CS1824 KVMP switches
+static void change_KVMP_port(int portHotkey, int ledNumber)
 {
 	all_leds_off_noeeprom(); // Turn off all LEDs
+	
 	kvmpConfig.Device.Port = kvmpConfig.KVM.Port = kvmpConfig.Usb.Port = kvmpConfig.Audio.Port = ledNumber; // Update kvmpConfig to reflect the port change
 	port_config_report(DEVICE, illuminationTime); // Report port configuration on OLED screen (with auto-clear)
 	
@@ -832,6 +869,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 				error_flash(); // Flash error pattern on MacroPad
 			}
 			else {
+				change_KM_port(2);
 				if (kvmpConfig.Device.Port == kvmpConfig.KVM.Port && kvmpConfig.KVM.Port == kvmpConfig.Audio.Port) { // Check if KVM, USB, and Audio focus on the ATEN CS1924 KVMP switch are all on the same port
 					port_config_report(DEVICE, illuminationTime); // Report selected port (device) on OLED screen (with auto-clear)
 				} else {
@@ -848,7 +886,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             // When keycode PORT_1 is pressed
 			portHotkey = KC_1; // Store target portHotkey
 			ledNumber = 1; // Store LED number corresponding to pressed key
-			change_port(portHotkey, ledNumber); // Call method to change ports on the ATEN CS1924 KVMP switch
+			change_KM_port(1); // Call method to change ports on the ATEN CS62KM KM switch (if needed)
+			change_KVMP_port(portHotkey, ledNumber); // Call method to change ports on the ATEN CS1924 or CS1824 KVMP switch
         } else {
             // When keycode PORT_1 is released
         }
@@ -859,7 +898,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             // When keycode PORT_2 is pressed
 			portHotkey = KC_2; // Store target portHotkey
 			ledNumber = 2; // Store LED number corresponding to pressed key
-			change_port(portHotkey, ledNumber); // Call method to change ports on the ATEN CS1924 KVMP switch
+			change_KM_port(1); // Call method to change ports on the ATEN CS62KM KM switch (if needed)
+			change_KVMP_port(portHotkey, ledNumber); // Call method to change ports on the ATEN CS1924 or CS1824 KVMP switch
         } else {
             // When keycode PORT_2 is released
         }
@@ -870,7 +910,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             // When keycode PORT_3 is pressed
 			portHotkey = KC_3; // Store target portHotkey
 			ledNumber = 3; // Store LED number corresponding to pressed key
-			change_port(portHotkey, ledNumber); // Call method to change ports on the ATEN CS1924 KVMP switch
+			change_KM_port(1); // Call method to change ports on the ATEN CS62KM KM switch (if needed)
+			change_KVMP_port(portHotkey, ledNumber); // Call method to change ports on the ATEN CS1924 or CS1824 KVMP switch
         } else {
             // When keycode PORT_3 is released
         }
@@ -881,7 +922,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             // When keycode KVM_1 is pressed
 			portHotkey = KC_1; // Store target portHotkey
 			ledNumber = 4; // Store LED number corresponding to pressed key
-			change_KVM(portHotkey, ledNumber); // Call method to change KVM focus on the ATEN CS1924 KVMP switch
+			change_KM_port(1); // Call method to change ports on the ATEN CS62KM KM switch (if needed)
+			change_KVM(portHotkey, ledNumber); // Call method to change KVM focus on the ATEN CS1924 or CS1824 KVMP switch
         } else {
             // When keycode KVM_1 is released
         }
@@ -892,7 +934,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             // When keycode KVM_2 is pressed
 			portHotkey = KC_2; // Store target portHotkey
 			ledNumber = 5; // Store LED number corresponding to pressed key
-			change_KVM(portHotkey, ledNumber); // Call method to change KVM focus on the ATEN CS1924 KVMP switch
+			change_KM_port(1); // Call method to change ports on the ATEN CS62KM KM switch (if needed)
+			change_KVM(portHotkey, ledNumber); // Call method to change KVM focus on the ATEN CS1924 or CS1824 KVMP switch
         } else {
             // When keycode KVM_2 is released
         }
@@ -903,7 +946,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             // When keycode KVM_3 is pressed
 			portHotkey = KC_3; // Store target portHotkey
 			ledNumber = 6; // Store LED number corresponding to pressed key
-			change_KVM(portHotkey, ledNumber); // Call method to change KVM focus on the ATEN CS1924 KVMP switch
+			change_KM_port(1); // Call method to change ports on the ATEN CS62KM KM switch (if needed)
+			change_KVM(portHotkey, ledNumber); // Call method to change KVM focus on the ATEN CS1924 or CS1824 KVMP switch
         } else {
             // When keycode KVM_3 is released
         }
@@ -914,7 +958,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             // When keycode USB_1 is pressed
 			portHotkey = KC_1; // Store target portHotkey
 			ledNumber = 7; // Store LED number corresponding to pressed key
-			change_usb(portHotkey, ledNumber); // Call method to change USB hub focus on the ATEN CS1924 KVMP switch
+			change_KM_port(1); // Call method to change ports on the ATEN CS62KM KM switch (if needed)
+			change_usb(portHotkey, ledNumber); // Call method to change USB hub focus on the ATEN CS1924 or CS1824 KVMP switch
         } else {
             // When keycode USB_1 is released
         }
@@ -925,7 +970,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             // When keycode USB_2 is pressed
 			portHotkey = KC_2; // Store target portHotkey
 			ledNumber = 8; // Store LED number corresponding to pressed key
-			change_usb(portHotkey, ledNumber); // Call method to change USB hub focus on the ATEN CS1924 KVMP switch
+			change_KM_port(1); // Call method to change ports on the ATEN CS62KM KM switch (if needed)
+			change_usb(portHotkey, ledNumber); // Call method to change USB hub focus on the ATEN CS1924 or CS1824 KVMP switch
         } else {
             // When keycode USB_2 is released
         }
@@ -936,7 +982,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             // When keycode USB_3 is pressed
 			portHotkey = KC_3; // Store target portHotkey
 			ledNumber = 9; // Store LED number corresponding to pressed key
-			change_usb(portHotkey, ledNumber); // Call method to change USB hub focus on the ATEN CS1924 KVMP switch
+			change_KM_port(1); // Call method to change ports on the ATEN CS62KM KM switch (if needed)
+			change_usb(portHotkey, ledNumber); // Call method to change USB hub focus on the ATEN CS1924 or CS1824 KVMP switch
         } else {
             // When keycode USB_3 is released
         }
@@ -947,7 +994,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             // When keycode AUDIO_1 is pressed
 			portHotkey = KC_1; // Store target portHotkey
 			ledNumber = 10; // Store LED number corresponding to pressed key
-			change_audio(portHotkey, ledNumber); // Call method to change audio focus on the ATEN CS1924 KVMP switch
+			change_KM_port(1); // Call method to change ports on the ATEN CS62KM KM switch (if needed)
+			change_audio(portHotkey, ledNumber); // Call method to change audio focus on the ATEN CS1924 or CS1824 KVMP switch
         } else {
             // When keycode AUDIO_1 is released
         }
@@ -958,7 +1006,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             // When keycode AUDIO_2 is pressed
 			portHotkey = KC_2; // Store target portHotkey
 			ledNumber = 11; // Store LED number corresponding to pressed key
-			change_audio(portHotkey, ledNumber); // Call method to change audio focus on the ATEN CS1924 KVMP switch
+			change_KM_port(1); // Call method to change ports on the ATEN CS62KM KM switch (if needed)
+			change_audio(portHotkey, ledNumber); // Call method to change audio focus on the ATEN CS1924 or CS1824 KVMP switch
         } else {
             // When keycode AUDIO_2 is released
         }
@@ -969,7 +1018,8 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             // When keycode AUDIO_3 is pressed
 			portHotkey = KC_3; // Store target portHotkey
 			ledNumber = 12; // Store LED number corresponding to pressed key
-			change_audio(portHotkey, ledNumber); // Call method to change audio focus on the ATEN CS1924 KVMP switch
+			change_KM_port(1); // Call method to change ports on the ATEN CS62KM KM switch (if needed)
+			change_audio(portHotkey, ledNumber); // Call method to change audio focus on the ATEN CS1924 or CS1824 KVMP switch
         } else {
             // When keycode AUDIO_3 is released
         }
