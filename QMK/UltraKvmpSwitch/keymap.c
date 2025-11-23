@@ -1,8 +1,9 @@
 // TODO
 // change references to only CS1924 to mention all 3 switches
-// insert QMK "tap dance" so that holding the top keys manipulates the CS1824 port selection
 // perhaps update the port_config_report so that it reports the state for both CS1924 and CS1824
 // experiment with how to get the encoder working again when attached to the CS62KM, CS1924, and CS1824 at the same time
+// create a "port check" version for the 2nd KVM associated with holding down the encoder
+// perhaps add "main" and "touch" (or something similar) to the bottom left when doing a port check for either KVM (to help indicate which KVM is being checked)
 
 
 /* Copyright (c) 2025 Exergist
@@ -105,8 +106,7 @@ typedef enum { DEVICE, KVM, USBHUB, AUDIO, ALL } PortReportingType;
 // **********************
 
 int illuminationTime = 2000; // Time in milliseconds to illuminate LEDs and OLED screen
-int keyPressDelay = 20; // Time in milliseconds to wait between virtually releasing a pressed (tapped) key
-///int kmActivePort = 1; // Active port on the ATEN CS62KM
+int keyPressDelay = 25; // Time in milliseconds to wait between virtually releasing a pressed (tapped) key
 static deferred_token led_off_tok[RGBLIGHT_LED_COUNT]; // One deferred token per LED
 static deferred_token oled_off_tok; // One deferred token for the OLED screen
 
@@ -129,11 +129,15 @@ KmConfig kmConfig = { // Initialize KM configuration variable
 void error_flash(void);
 void port_config_report(PortReportingType type, uint16_t ms);
 void change_KM_port(int portNumber);
-void port_check(void);
+void change_KVMP_port(int portHotkey, int ledNumber);
+void kvm1_check(void);
+///void kvm2_check(void);
 
 // ***************
 // *  TAP DANCE  *
 // ***************
+
+#ifdef OLED_ENABLE
 
 // |------------------------|
 // | Tap Dance Declarations |
@@ -142,7 +146,10 @@ void port_check(void);
 // Tap Dance identifier declaration
 enum
 {
-	ENCODER_DANCE
+	ENCODER_DANCE,
+	PORT1_DANCE,
+    PORT2_DANCE,
+    PORT3_DANCE
 };
 
 // Tap Dance action type declaration
@@ -188,18 +195,36 @@ static td_tap_t encoderTap_state = {
     .state = TD_NONE
 };
 
-// Method to run when Tap Dance action finishes
+// Create an instance of td_tap_t for the Port1 Tap Dance
+static td_tap_t port1Tap_state = {
+    .is_press_action = true,
+    .state = TD_NONE
+};
+
+// Create an instance of td_tap_t for the Port2 Tap Dance
+static td_tap_t port2Tap_state = {
+    .is_press_action = true,
+    .state = TD_NONE
+};
+
+// Create an instance of td_tap_t for the Port3 Tap Dance
+static td_tap_t port3Tap_state = {
+    .is_press_action = true,
+    .state = TD_NONE
+};
+
+// Method run when Encoder Tap Dance action finishes
 void EncoderTapFinished(tap_dance_state_t *state, void *user_data)
 {
     encoderTap_state.state = CurrentDance(state);
     switch (encoderTap_state.state)
 	{
 		case TD_SINGLE_TAP: {
-			port_check();
+			kvm1_check();
 			break;
 		}
 		case TD_SINGLE_HOLD:
-			change_KM_port(2); // Call method to change the CS62KM KM switch port to 2
+			error_flash(); // debug only
 			break;
 		case TD_DOUBLE_TAP:
 			// do nothing
@@ -214,11 +239,88 @@ void EncoderTapFinished(tap_dance_state_t *state, void *user_data)
 	encoderTap_state.state = TD_NONE; // Reset encoderTap_state
 }
 
+// Method run when Port1 Tap Dance action finishes
+void Port1TapFinished(tap_dance_state_t *state, void *user_data)
+{
+    port1Tap_state.state = CurrentDance(state);
+    switch (port1Tap_state.state)
+    {
+        case TD_SINGLE_TAP:
+            // Single tap: KM -> port 1 (CS1924), KVMP -> port 1
+            change_KM_port(1);
+            change_KVMP_port(KC_1, 1);
+            break;
+
+        case TD_SINGLE_HOLD:
+            // Hold: KM -> port 2 (CS1824), KVMP -> port 1
+            change_KM_port(2);
+            change_KVMP_port(KC_1, 1);
+            break;
+
+        default:
+            break;
+    }
+    port1Tap_state.state = TD_NONE;
+}
+
+// Method run when Port2 Tap Dance action finishes
+void Port2TapFinished(tap_dance_state_t *state, void *user_data)
+{
+    port2Tap_state.state = CurrentDance(state);
+    switch (port2Tap_state.state)
+    {
+        case TD_SINGLE_TAP:
+            // Single tap: KM -> port 1 (CS1924), KVMP -> port 2
+            change_KM_port(1);
+            change_KVMP_port(KC_2, 2);
+            break;
+
+        case TD_SINGLE_HOLD:
+            // Hold: KM -> port 2 (CS1824), KVMP -> port 2
+            change_KM_port(2);
+            change_KVMP_port(KC_2, 2);
+            break;
+
+        default:
+            break;
+    }
+    port2Tap_state.state = TD_NONE;
+}
+
+// Method run when Port3 Tap Dance action finishes
+void Port3TapFinished(tap_dance_state_t *state, void *user_data)
+{
+    port3Tap_state.state = CurrentDance(state);
+    switch (port3Tap_state.state)
+    {
+        case TD_SINGLE_TAP:
+            // Single tap: KM -> port 1 (CS1924), KVMP -> port 3
+            change_KM_port(1);
+            change_KVMP_port(KC_3, 3);
+            break;
+
+        case TD_SINGLE_HOLD:
+            // Hold: KM -> port 2 (CS1824), KVMP -> port 3
+            change_KM_port(2);
+            change_KVMP_port(KC_3, 3);
+            break;
+
+        default:
+            break;
+    }
+    port3Tap_state.state = TD_NONE;
+}
+
 // Tap Dance action definition
 tap_dance_action_t  tap_dance_actions[] = {
-    [ENCODER_DANCE] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, EncoderTapFinished, NULL)
+    [ENCODER_DANCE] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, EncoderTapFinished, NULL),
+	[PORT1_DANCE]   = ACTION_TAP_DANCE_FN_ADVANCED(NULL, Port1TapFinished, NULL),
+    [PORT2_DANCE]   = ACTION_TAP_DANCE_FN_ADVANCED(NULL, Port2TapFinished, NULL),
+    [PORT3_DANCE]   = ACTION_TAP_DANCE_FN_ADVANCED(NULL, Port3TapFinished, NULL)
 	///[ENCODER_DANCE] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, EncoderTapFinished, EncoderTapReset)
 };
+
+#endif
 
 // ************
 // *  KEYMAP  *
@@ -280,11 +382,11 @@ tap_dance_action_t  tap_dance_actions[] = {
 // Defines the behavior for encoder and key presses across all applicable layers
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   [0] = LAYOUT(
-						   TD(ENCODER_DANCE),
-      PORT_1,   PORT_2,    PORT_3,
-      KVM_1,    KVM_2,     KVM_3,
-      USB_1,    USB_2,     USB_3,
-      AUDIO_1,  AUDIO_2,   AUDIO_3
+										TD(ENCODER_DANCE),
+      TD(PORT1_DANCE), TD(PORT2_DANCE), TD(PORT3_DANCE),
+      KVM_1,    	   KVM_2,     		KVM_3,
+      USB_1,    	   USB_2,     		USB_3,
+      AUDIO_1,  	   AUDIO_2,   		AUDIO_3
   )
 };
 
@@ -732,9 +834,7 @@ void error_flash(void)
 
 // Method to change ports on the ATEN CS62KM KM switch
 void change_KM_port(int portNumber)
-{
-	///all_leds_off_noeeprom(); // Turn off all LEDs
-		
+{	
 	if (kmConfig.Device.Port != portNumber) {
 		kmConfig.Device.Port = portNumber; // Update kmConfig to reflect the port change
 		uint16_t portHotkey = (portNumber == 1 ? KC_1 : KC_2); // Store keycode corresponding to the target port number
@@ -745,8 +845,6 @@ void change_KM_port(int portNumber)
 		tap_code_delay(portHotkey, keyPressDelay); // Send the keycode corresponding to the target port number
 		tap_code(KC_ENTER);
 	}
-	
-	///port_config_report(DEVICE, illuminationTime); // Report port configuration on OLED screen (with auto-clear)
 }
 
 // |----------------------------------|
@@ -868,7 +966,7 @@ void port_config_report(PortReportingType type, uint16_t ms)
 }
 
 // Method to change ports on the ATEN CS1924 or CS1824 KVMP switches
-static void change_KVMP_port(int portHotkey, int ledNumber)
+void change_KVMP_port(int portHotkey, int ledNumber)
 {
 	all_leds_off_noeeprom(); // Turn off all LEDs
 	
@@ -962,13 +1060,13 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
 	/* case PORT_CHECK:
         if (record->event.pressed) { // When keycode PORT_CHECK is pressed
-			port_check(); // Call method to report current KVMP switch configuration
+			kvm1_check(); // Call method to report current KVMP switch configuration
         } else {
             // When keycode PORT_CHECK is released
         }
         return true; */
 		
-    case PORT_1:
+    /* case PORT_1:
         if (record->event.pressed) { // When keycode PORT_1 is pressed
 			portHotkey = KC_1; // Store target portHotkey
 			ledNumber = 1; // Store LED number corresponding to pressed key
@@ -977,9 +1075,9 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         } else {
             // When keycode PORT_1 is released
         }
-        break;
+        break; */
 
-    case PORT_2:
+    /* case PORT_2:
         if (record->event.pressed) { // When keycode PORT_2 is pressed
 			portHotkey = KC_2; // Store target portHotkey
 			ledNumber = 2; // Store LED number corresponding to pressed key
@@ -988,9 +1086,9 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         } else {
             // When keycode PORT_2 is released
         }
-        break;
+        break; */
 		
-    case PORT_3:
+    /* case PORT_3:
         if (record->event.pressed) { // When keycode PORT_3 is pressed
 			portHotkey = KC_3; // Store target portHotkey
 			ledNumber = 3; // Store LED number corresponding to pressed key
@@ -999,7 +1097,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         } else {
             // When keycode PORT_3 is released
         }
-        break;
+        break; */
 		
     case KVM_1:
         if (record->event.pressed) { // When keycode KVM_1 is pressed
@@ -1104,7 +1202,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 }
 
 // Method for reporting current configuration on the ATEN CS1924 or CS1824 KVMP switch
-void port_check(void) {
+void kvm1_check(void) {
 	int inputCheck = kvmpConfig.Device.Port + kvmpConfig.KVM.Port + kvmpConfig.Usb.Port + kvmpConfig.Audio.Port;
 	if (inputCheck == -4) {
 		// MacroPad hasn't been used to send port or focus selection input to ATEN CS1924 KVMP switch
