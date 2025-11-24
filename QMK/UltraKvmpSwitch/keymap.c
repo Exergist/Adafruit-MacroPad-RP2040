@@ -1,5 +1,4 @@
 // TODO
-// change references to only CS1924 to mention all 3 switches
 // perhaps update the port_config_report so that it reports the state for both CS1924 and CS1824
 // experiment with how to get the encoder working again when attached to the CS62KM, CS1924, and CS1824 at the same time
 // create a "port check" version for the 2nd KVM associated with holding down the encoder
@@ -37,7 +36,7 @@ SOFTWARE.
 // | |  | | (_| | (__| | | (_) | |  | (_| | (_| | | | \ \| |    / /_| |_| |  | | | |_| |
 // |_|  |_|\__,_|\___|_|  \___/|_|   \__,_|\__,_| |_|  \_\_|   |____|\___/   |_|  \___/ 
 //																						
-// 																	SUPER KVMP SWITCH
+// 																	ULTRA KVMP SWITCH
 */
  
 // *************
@@ -77,10 +76,10 @@ SOFTWARE.
 // Name and assigned unique numbers for custom keycodes
 enum customKeycodes
 {
-	PORT_1 = SAFE_RANGE,
+	/* PORT_1 = SAFE_RANGE,
 	PORT_2,
-	PORT_3,
-	KVM_1,
+	PORT_3, */
+	KVM_1 = SAFE_RANGE,
 	KVM_2,
 	KVM_3,
 	USB_1,
@@ -843,7 +842,7 @@ void change_KM_port(int portNumber)
 		tap_code_delay(KC_RIGHT_CTRL, keyPressDelay);
 		tap_code_delay(KC_RIGHT_CTRL, keyPressDelay);
 		tap_code_delay(portHotkey, keyPressDelay); // Send the keycode corresponding to the target port number
-		tap_code(KC_ENTER);
+		tap_code_delay(KC_ENTER, keyPressDelay);
 	}
 }
 
