@@ -1,13 +1,18 @@
-// TODO
-// experiment with how to get the encoder working again when attached to the CS62KM, CS1924, and CS1824 at the same time
-// perhaps add "main" and "touch" (or something similar) to the bottom left when doing a port check for either KVM (to help indicate which KVM is being checked) ==> keep experimenting with this
-
+/*
+//  __  __                      _____          _   _____  _____ ___   ___  _  _    ___  
+// |  \/  |                    |  __ \        | | |  __ \|  __ \__ \ / _ \| || |  / _ \ 
+// | \  / | __ _  ___ _ __ ___ | |__) |_ _  __| | | |__) | |__) | ) | | | | || |_| | | |
+// | |\/| |/ _` |/ __| '__/ _ \|  ___/ _` |/ _` | |  _  /|  ___/ / /| | | |__   _| | | |
+// | |  | | (_| | (__| | | (_) | |  | (_| | (_| | | | \ \| |    / /_| |_| |  | | | |_| |
+// |_|  |_|\__,_|\___|_|  \___/|_|   \__,_|\__,_| |_|  \_\_|   |____|\___/   |_|  \___/ 
+//																						
+// 																	ULTRA KVMP SWITCH
+*/
 
 /* Copyright (c) 2025 Exergist
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associa1k
-ted documentation files (the "Software"), to deal
+of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
 to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 copies of the Software, and to permit persons to whom the Software is
@@ -26,29 +31,18 @@ SOFTWARE.
 
  */
  
-/*
-//  __  __                      _____          _   _____  _____ ___   ___  _  _    ___  
-// |  \/  |                    |  __ \        | | |  __ \|  __ \__ \ / _ \| || |  / _ \ 
-// | \  / | __ _  ___ _ __ ___ | |__) |_ _  __| | | |__) | |__) | ) | | | | || |_| | | |
-// | |\/| |/ _` |/ __| '__/ _ \|  ___/ _` |/ _` | |  _  /|  ___/ / /| | | |__   _| | | |
-// | |  | | (_| | (__| | | (_) | |  | (_| | (_| | | | \ \| |    / /_| |_| |  | | | |_| |
-// |_|  |_|\__,_|\___|_|  \___/|_|   \__,_|\__,_| |_|  \_\_|   |____|\___/   |_|  \___/ 
-//																						
-// 																	ULTRA KVMP SWITCH
-*/
- 
 // *************
 // *  SUMMARY  *
 // *************
 
 // Custom keymap for MacroPad RP2040 by Exergist (2025)
 // Functionality includes:
-//   • Unified hotkey control of ATEN CS1924 KVMP switch, CS1824 KVMP switch, and CS62KM KM switch (port select, KVM-only, USB-only, audio-only, status check)
-//	 	○ CS62KM directs input to either CS1924 or CS1824 to control either KVMP
+//   • Unified hotkey control of ATEN CS1924 KVMP switch, CS1824 KVMP switch, and CS62KM KM switch (port select, KVM-only, USB-only, audio-only, configuration check)
+//	 	○ CS62KM directs input to CS1924 or CS1824 to control either KVMP
 //   • OLED UI with device/port status and icons (fast, pixel-accurate blits; page-aligned)
 //   • RGB key lighting as visual feedback for current state
 //   • Timed auto-off for OLED and LEDs using deferred callbacks
-//   • Rotary encoder mapped to system volume
+//   • Rotary encoder mapped to system volume (though this isn't supported by the CS62KM)
 //   • Sleep/wake handling to clear/re-init OLED and LEDs
 
 // **********************
@@ -123,7 +117,7 @@ KvmpConfig kvmp2Config = { // Initialize KVMP 2 (CS1824) configuration variable
 	.Name	= "CS1824"
 };
 
-KmConfig kmConfig = { // Initialize KM configuration variable	
+KmConfig kmConfig = { // Initialize KM (CS62KM) configuration variable	
 	.Device = { .Port = -1, .Color = (HSV){HSV_PINK} }
 };
 
@@ -323,7 +317,6 @@ tap_dance_action_t  tap_dance_actions[] = {
 	[PORT1_DANCE]   = ACTION_TAP_DANCE_FN_ADVANCED(NULL, Port1TapFinished, NULL),
     [PORT2_DANCE]   = ACTION_TAP_DANCE_FN_ADVANCED(NULL, Port2TapFinished, NULL),
     [PORT3_DANCE]   = ACTION_TAP_DANCE_FN_ADVANCED(NULL, Port3TapFinished, NULL)
-	///[ENCODER_DANCE] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, EncoderTapFinished, EncoderTapReset)
 };
 
 #endif
@@ -388,11 +381,11 @@ tap_dance_action_t  tap_dance_actions[] = {
 // Defines the behavior for encoder and key presses across all applicable layers
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
   [0] = LAYOUT(
-										TD(ENCODER_DANCE),
-      TD(PORT1_DANCE), TD(PORT2_DANCE), TD(PORT3_DANCE),
-      KVM_1,    	   KVM_2,     		KVM_3,
-      USB_1,    	   USB_2,     		USB_3,
-      AUDIO_1,  	   AUDIO_2,   		AUDIO_3
+											TD(ENCODER_DANCE),
+      TD(PORT1_DANCE), 	TD(PORT2_DANCE), 	TD(PORT3_DANCE),
+      KVM_1,    	   	KVM_2,     			KVM_3,
+      USB_1,    	   	USB_2,     			USB_3,
+      AUDIO_1,  	   	AUDIO_2,   			AUDIO_3
   )
 };
 
@@ -910,34 +903,7 @@ void kvmp_config_report(KvmpConfig kvmpConfig, PortReportingType type, uint16_t 
 				}
 			}
 			break;
-		
-		/* case KVM:
-			if (kvmpConfig.KVM.Port != -1) { // Check if the KVM port has been changed
-				snprintf(line1, sizeof(line1), "KVM:%d", kvmpConfig.KVM.Port); // Insert content into line1
-			} else {
-				snprintf(line1, sizeof(line1), "KVM:?"); // Insert content into line1
-			}
-			oled_write_ln(line1, false);  // Write line1 and include newline
-			break; */
-		
-		/* case USBHUB:
-			if (kvmpConfig.Usb.Port != -1) { // Check if the USB hub port has been changed
-				snprintf(line1, sizeof(line1), "USB:%d", kvmpConfig.Usb.Port); // Insert content into line1
-			} else {
-				snprintf(line1, sizeof(line1), "USB:?"); // Insert content into line1
-			}
-			oled_write_ln(line1, false);  // Write line1 and include newline
-			break; */
-		
-		/* case AUDIO:
-			if (kvmpConfig.Audio.Port != -1) { // Check if the audio port has been changed
-				snprintf(line1, sizeof(line1), "Audio:%d", kvmpConfig.Audio.Port); // Insert content into line1
-			} else {
-				snprintf(line1, sizeof(line1), "Audio:?"); // Insert content into line1
-			}
-			oled_write_ln(line1, false);  // Write line1 and include newline
-			break; */
-		
+			
 		case ALL:
 			if (kvmpConfig.Device.Port == kvmpConfig.KVM.Port && kvmpConfig.KVM.Port == kvmpConfig.Audio.Port) { // Check if all focus is actually on one device
 				kvmp_config_report(kvmpConfig, DEVICE, illuminationTime); // Report selected port (device) configuration on OLED screen (with auto-clear)
@@ -967,14 +933,6 @@ void kvmp_config_report(KvmpConfig kvmpConfig, PortReportingType type, uint16_t 
 			oled_blit_P(image40x40_table[kvmpConfig.Usb.Port-1], 40, 40, 44, 24, illuminationTime); // Show which device has USB hub focus on the OLED screen
 			oled_blit_P(image40x40_table[kvmpConfig.Audio.Port-1], 40, 40, 89, 24, illuminationTime); // Show which device has Audio focus on the OLED screen
 			
-			// Write the footer
-			/* oled_set_cursor(0, 7);  // Position the OLED cursor at the bottom left of the screen
-			snprintf(line1, sizeof(line1), "main"); // Insert content into line1
-			oled_write_ln(line1, false);  // Write line1 and include newline */
-			
-			/* // Write the target KVMP's primary function (as a footer)
-			oled_set_cursor(0, 7);   // Position the OLED cursor at the bottom left of the screen
-			oled_write("main", false); // Write content (KVMP primary function) on the OLED screen */
 			break;
 			
 		default:
@@ -1287,13 +1245,6 @@ void kvmp2_check(void) {
 	else {
 		all_leds_off_noeeprom(); // Turn off all key LEDs
 		kvmp_config_report(kvmp2Config, DEVICE, illuminationTime); // Report selected KVMP port (device) on OLED screen (with auto-clear)
-		// TBD
-		
-		/* if (kvmpConfig.Device.Port == kvmpConfig.KVM.Port && kvmpConfig.KVM.Port == kvmpConfig.Audio.Port) { // Check if KVM, USB, and Audio focus on the ATEN CS1924/CS1824 KVMP switch are all on the same port
-			kvmp_config_report(DEVICE, illuminationTime); // Report selected KVMP port (device) on OLED screen (with auto-clear)
-		} else {
-			kvmp_config_report(ALL, illuminationTime); // Report KVMP port or focus configuration for all devices on OLED screen (with auto-clear)
-		} */
 	}
 }
 
@@ -1326,73 +1277,4 @@ void suspend_wakeup_init_user(void) {
 // *  ARCHIVE  *
 // *************
 
-/* // Method to output ATEN CS1924/CS1824 port or focus status via text information on the OLED screen
-static void kvmp_config_report(PortReportingType type, uint16_t ms)
-{
-	char line1[16]; // Create a buffer
-	oled_clear(); // Clear the OLED screen of content
-	
-	switch (type) {
-		case DEVICE:
-			if (kvmpConfig.Device.Port != -1) { // Check if the device port has been changed
-				snprintf(line1, sizeof(line1), "Port:%d", kvmpConfig.Device.Port); // Insert content into line1
-			} else {
-				snprintf(line1, sizeof(line1), "Port:?"); // Insert content into line1
-			}
-			oled_write_ln(line1, false);  // Write line1 and include newline
-			break;
-		
-		case KVM:
-			if (kvmpConfig.KVM.Port != -1) { // Check if the KVM port has been changed
-				snprintf(line1, sizeof(line1), "KVM:%d", kvmpConfig.KVM.Port); // Insert content into line1
-			} else {
-				snprintf(line1, sizeof(line1), "KVM:?"); // Insert content into line1
-			}
-			oled_write_ln(line1, false);  // Write line1 and include newline
-			break;
-		
-		case USBHUB:
-			if (kvmpConfig.Usb.Port != -1) { // Check if the USB hub port has been changed
-				snprintf(line1, sizeof(line1), "USB:%d", kvmpConfig.Usb.Port); // Insert content into line1
-			} else {
-				snprintf(line1, sizeof(line1), "USB:?"); // Insert content into line1
-			}
-			oled_write_ln(line1, false);  // Write line1 and include newline
-			break;
-		
-		case AUDIO:
-			if (kvmpConfig.Audio.Port != -1) { // Check if the audio port has been changed
-				snprintf(line1, sizeof(line1), "Audio:%d", kvmpConfig.Audio.Port); // Insert content into line1
-			} else {
-				snprintf(line1, sizeof(line1), "Audio:?"); // Insert content into line1
-			}
-			oled_write_ln(line1, false);  // Write line1 and include newline
-			break;
-		
-		case ALL:
-			char line2[40], dvcStr[8], kvmStr[8], usbStr[8], audStr[8]; // Create buffers
-			
-			// Preprocess to format each value for possible insertion of "?"
-			snprintf(dvcStr, sizeof(dvcStr), "%s",  kvmpConfig.Device.Port   == -1 ? "?" : "");
-			snprintf(kvmStr, sizeof(kvmStr), "%s",  kvmpConfig.KVM.Port   == -1 ? "?" : "");
-			snprintf(usbStr, sizeof(usbStr), "%s",  kvmpConfig.Usb.Port   == -1 ? "?" : "");
-			snprintf(audStr, sizeof(audStr), "%s",  kvmpConfig.Audio.Port == -1 ? "?" : "");
-			
-			// Replace empty strings with actual port numbers
-			if (dvcStr[0] == '\0') snprintf(dvcStr, sizeof(dvcStr), "%d", kvmpConfig.Device.Port);
-			if (kvmStr[0] == '\0') snprintf(kvmStr, sizeof(kvmStr), "%d", kvmpConfig.KVM.Port);
-			if (usbStr[0] == '\0') snprintf(usbStr, sizeof(usbStr), "%d", kvmpConfig.Usb.Port);
-			if (audStr[0] == '\0') snprintf(audStr, sizeof(audStr), "%d", kvmpConfig.Audio.Port);
-
-			snprintf(line1, sizeof(line1), "Port:%s", dvcStr); // Insert content into line1
-			snprintf(line2, sizeof(line2), "KVM:%s USB:%s Audio:%s", kvmStr, usbStr, audStr); // Insert content into line2
-			oled_write_ln(line1, false);  // Write line1 to the OLED screen and include newline
-			oled_write_ln(line2, false);  // Write line2 to the OLED screen and include newline
-			break;
-	}
-	if (oled_off_tok != INVALID_DEFERRED_TOKEN) { // Check if a valid deferral token already exists
-		extend_deferred_exec(oled_off_tok, ms); // Extend the existing pending execution relative to "now"
-	} else {
-		oled_off_tok = defer_exec(ms, oled_off_cb, NULL); // Schedule a fresh deferral
-	}
-} */
+// empty
