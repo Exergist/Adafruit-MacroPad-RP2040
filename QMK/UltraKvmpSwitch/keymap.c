@@ -1,6 +1,6 @@
 // TODO
 // experiment with how to get the encoder working again when attached to the CS62KM, CS1924, and CS1824 at the same time
-// perhaps add "main" and "touch" (or something similar) to the bottom left when doing a port check for either KVM (to help indicate which KVM is being checked)
+// perhaps add "main" and "touch" (or something similar) to the bottom left when doing a port check for either KVM (to help indicate which KVM is being checked) ==> keep experimenting with this
 
 
 /* Copyright (c) 2025 Exergist
@@ -143,7 +143,7 @@ void kvmp2_check(void);
 // *  TAP DANCE  *
 // ***************
 
-#ifdef OLED_ENABLE
+#ifdef TAP_DANCE_ENABLE
 
 // |------------------------|
 // | Tap Dance Declarations |
@@ -873,6 +873,7 @@ void kvmp_config_report(KvmpConfig kvmpConfig, PortReportingType type, uint16_t 
 	switch (type) {
 		case DEVICE:
 			if (kvmpConfig.Device.Port != -1) { // Check if the device port has been changed
+				// Write the device images
 				if (kvmpConfig.Device.Port == 1) { // Check if port 1 is active
 					oled_blit_P(laptop64x64, 64, 64, 32, 0, illuminationTime); // Show laptop image on OLED screen
 				} else if (kvmpConfig.Device.Port == 2) { // Check if port 2 is active
@@ -883,12 +884,30 @@ void kvmp_config_report(KvmpConfig kvmpConfig, PortReportingType type, uint16_t 
 					error_flash(); // Flash error pattern on MacroPad
 					return;
 				}
+				// Write the port number for the device
 				oled_set_cursor(0, 0);  // Position the OLED cursor at the top left of the screen
 				snprintf(line1, sizeof(line1), "Port:%d", kvmpConfig.Device.Port); // Insert content into line1
 				oled_write(line1, false);  // Write line1 to the OLED screen
+				
+				// Write the target KVMP's primary function (as a footer)
+				oled_set_cursor(0, 7);   // Position the OLED cursor at the bottom left of the screen
+				if (kvmpConfig.Name == kvmp1Config.Name) {
+					oled_write("main", false); // Write content on the OLED screen
+				} else {
+					oled_write("touch", false); // Write content on the OLED screen
+				}
 			} else {
+				// Write the port number for the device
 				snprintf(line1, sizeof(line1), "Port:?"); // Insert content into line1
 				oled_write_ln(line1, false);  // Write line1 and include newline
+				
+				// Write the target KVMP's primary function (as a footer)
+				oled_set_cursor(0, 7);   // Position the OLED cursor at the bottom left of the screen
+				if (kvmpConfig.Name == kvmp1Config.Name) {
+					oled_write("main", false); // Write content on the OLED screen
+				} else {
+					oled_write("touch", false); // Write content on the OLED screen
+				}
 			}
 			break;
 		
@@ -925,13 +944,17 @@ void kvmp_config_report(KvmpConfig kvmpConfig, PortReportingType type, uint16_t 
 				return;
 			}
 			
-			// Write the header
-			oled_set_cursor(0, 0);  // Position the OLED cursor at the top left of the screen
+			// Write the target KVMP's primary function (as primary header)
+			oled_set_cursor(0, 0);   // Position the OLED cursor at the bottom left of the screen
+			oled_write("        main", false); // Write content (KVMP primary function) on the OLED screen
+			
+			// Write the seconday header
+			oled_set_cursor(0, 1);  // Position the OLED cursor at the top left of the screen
 			snprintf(line1, sizeof(line1), "  KVM    USB    Audio"); // Insert content into line1
 			oled_write_ln(line1, false);  // Write line1 and include newline
 			
 			// Write the port number for each device
-			oled_set_cursor(0, 1);  // Position the OLED cursor at the top left of the screen
+			oled_set_cursor(0, 2);  // Position the OLED cursor at the top left of the screen
 			char kvm_s[12], usb_s[12], aud_s[12]; 
 			snprintf(line1, sizeof(line1), "   %s      %s       %s",  // Insert content into line1
 				format_port_output(kvmpConfig.KVM.Port,   kvm_s, sizeof kvm_s),
@@ -940,9 +963,18 @@ void kvmp_config_report(KvmpConfig kvmpConfig, PortReportingType type, uint16_t 
 			oled_write_ln(line1, false);  // Write line1 and include newline
 			
 			// Write the device images
-			oled_blit_P(image40x40_table[kvmpConfig.KVM.Port-1], 40, 40, 0, 16, illuminationTime); // Show which device has KVM focus on the OLED screen
-			oled_blit_P(image40x40_table[kvmpConfig.Usb.Port-1], 40, 40, 44, 16, illuminationTime); // Show which device has USB hub focus on the OLED screen
-			oled_blit_P(image40x40_table[kvmpConfig.Audio.Port-1], 40, 40, 89, 16, illuminationTime); // Show which device has Audio focus on the OLED screen
+			oled_blit_P(image40x40_table[kvmpConfig.KVM.Port-1], 40, 40, 0, 24, illuminationTime); // Show which device has KVM focus on the OLED screen
+			oled_blit_P(image40x40_table[kvmpConfig.Usb.Port-1], 40, 40, 44, 24, illuminationTime); // Show which device has USB hub focus on the OLED screen
+			oled_blit_P(image40x40_table[kvmpConfig.Audio.Port-1], 40, 40, 89, 24, illuminationTime); // Show which device has Audio focus on the OLED screen
+			
+			// Write the footer
+			/* oled_set_cursor(0, 7);  // Position the OLED cursor at the bottom left of the screen
+			snprintf(line1, sizeof(line1), "main"); // Insert content into line1
+			oled_write_ln(line1, false);  // Write line1 and include newline */
+			
+			/* // Write the target KVMP's primary function (as a footer)
+			oled_set_cursor(0, 7);   // Position the OLED cursor at the bottom left of the screen
+			oled_write("main", false); // Write content (KVMP primary function) on the OLED screen */
 			break;
 			
 		default:
