@@ -1,3 +1,6 @@
+// TODO
+// pressing the KVM, USB, or audio port as the FIRST button shows the ? but doesn't show the other devices/columns. first press should show at least 1 image
+
 /*
 //  __  __                      _____          _   _____  _____ ___   ___  _  _    ___  
 // |  \/  |                    |  __ \        | | |  __ \|  __ \__ \ / _ \| || |  / _ \ 
