@@ -890,11 +890,11 @@ void kvmp_config_report(KvmpConfig kvmpConfig, PortReportingType type, uint16_t 
 				oled_write(line1, false);  // Write line1 to the OLED screen
 				
 				// Write the target KVMP's primary function (as a footer)
-				oled_set_cursor(0, 7);   // Position the OLED cursor at the bottom left of the screen
+				oled_set_cursor(16, 0);   // Position the OLED cursor at the top right of the screen
 				if (kvmpConfig.Name == kvmp1Config.Name) {
-					oled_write("main", false); // Write content on the OLED screen
+					oled_write("Prime", false); // Write content on the OLED screen
 				} else {
-					oled_write("touch", false); // Write content on the OLED screen
+					oled_write("Touch", false); // Write content on the OLED screen
 				}
 			} else {
 				// Write the port number for the device
@@ -902,11 +902,11 @@ void kvmp_config_report(KvmpConfig kvmpConfig, PortReportingType type, uint16_t 
 				oled_write_ln(line1, false);  // Write line1 and include newline
 				
 				// Write the target KVMP's primary function (as a footer)
-				oled_set_cursor(0, 7);   // Position the OLED cursor at the bottom left of the screen
+				oled_set_cursor(16, 0);   // Position the OLED cursor at the top right of the screen
 				if (kvmpConfig.Name == kvmp1Config.Name) {
-					oled_write("main", false); // Write content on the OLED screen
+					oled_write("Prime", false); // Write content on the OLED screen
 				} else {
-					oled_write("touch", false); // Write content on the OLED screen
+					oled_write("Touch", false); // Write content on the OLED screen
 				}
 			}
 			break;
@@ -945,8 +945,8 @@ void kvmp_config_report(KvmpConfig kvmpConfig, PortReportingType type, uint16_t 
 			}
 			
 			// Write the target KVMP's primary function (as primary header)
-			oled_set_cursor(0, 0);   // Position the OLED cursor at the bottom left of the screen
-			oled_write("        main", false); // Write content (KVMP primary function) on the OLED screen
+			oled_set_cursor(8, 0);   // Position the OLED cursor at the bottom left of the screen
+			oled_write("Prime", false); // Write content (KVMP primary function) on the OLED screen
 			
 			// Write the seconday header
 			oled_set_cursor(0, 1);  // Position the OLED cursor at the top left of the screen
