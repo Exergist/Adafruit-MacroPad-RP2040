@@ -858,7 +858,7 @@ static const char *format_port_output(int p, char *buf, size_t n) {
     return buf; // Return buf
 }
 
-// Method to output ATEN CS1924 port or focus status via imagery on the OLED screen and key backlights
+// Method to output ATEN CS1924/CS1824 port or focus status via imagery on the OLED screen and key backlights
 void port_config_report(PortReportingType type, uint16_t ms)
 {
 	char line1[64]; // Create a buffer
@@ -973,14 +973,14 @@ void change_KVMP_port(int portHotkey, int ledNumber)
 	kvmpConfig.Device.Port = kvmpConfig.KVM.Port = kvmpConfig.Usb.Port = kvmpConfig.Audio.Port = ledNumber; // Update kvmpConfig to reflect the port change
 	port_config_report(DEVICE, illuminationTime); // Report port configuration on OLED screen (with auto-clear)
 	
-	// Send series of key taps (macro) to focus on target port on the ATEN CS1924 KVMP switch
+	// Send series of key taps (macro) to focus on target port on the ATEN CS1924/CS1824 KVMP switch
 	tap_code_delay(KC_SCROLL_LOCK, keyPressDelay);
 	tap_code_delay(KC_SCROLL_LOCK, keyPressDelay);
 	tap_code_delay(portHotkey, keyPressDelay); // Send the keycode corresponding to the target port number
 	tap_code(KC_ENTER);
 }
 
-// Method to change only the KVM (keyboard, video, mouse) focus on the ATEN CS1924 KVMP switch to target port
+// Method to change only the KVM (keyboard, video, mouse) focus on the ATEN CS1924/CS1824 KVMP switch to target port
 static void change_KVM(uint16_t portHotkey, int ledNumber)
 {
 	all_leds_off_noeeprom(); // Turn off all LEDs
@@ -995,7 +995,7 @@ static void change_KVM(uint16_t portHotkey, int ledNumber)
 	///port_config_report(KVM, illuminationTime); // Report port or focus configuration on OLED screen (with auto-clear)
 	///light_led_for(ledNumber, kvmpConfig.KVM.Color, (uint16_t)illuminationTime); // Turn on keypad LED for selected KVM-focused port for a period of time (they will auto-off)
 	
-	// Send series of key taps (macro) to direct the ATEN CS1924 KVMP switch's KVM to focus on a target port
+	// Send series of key taps (macro) to direct the ATEN CS1924/CS1824 KVMP switch's KVM to focus on a target port
 	tap_code_delay(KC_SCROLL_LOCK, keyPressDelay);
 	tap_code_delay(KC_SCROLL_LOCK, keyPressDelay);
 	tap_code_delay(portHotkey, keyPressDelay); // Send the keycode corresponding to the target port number
@@ -1003,7 +1003,7 @@ static void change_KVM(uint16_t portHotkey, int ledNumber)
 	tap_code(KC_ENTER);
 }
 
-// Method to change only the usb hub focus on the ATEN CS1924 KVMP switch to target port
+// Method to change only the usb hub focus on the ATEN CS1924/CS1824 KVMP switch to target port
 static void change_usb(uint16_t portHotkey, int ledNumber)
 {
 	all_leds_off_noeeprom(); // Turn off all LEDs
@@ -1018,7 +1018,7 @@ static void change_usb(uint16_t portHotkey, int ledNumber)
 	///port_config_report(USBHUB, illuminationTime); // Report port or focus configuration on OLED screen (with auto-clear)
 	///light_led_for(ledNumber, kvmpConfig.Usb.Color, (uint16_t)illuminationTime); // Turn on keypad LED for selected USB-focused port for a period of time (they will auto-off)	
 	
-	// Send series of key taps (macro) to direct the ATEN CS1924 KVMP switch's USB hub to focus on a target port
+	// Send series of key taps (macro) to direct the ATEN CS1924/CS1824 KVMP switch's USB hub to focus on a target port
 	tap_code_delay(KC_SCROLL_LOCK, keyPressDelay);
 	tap_code_delay(KC_SCROLL_LOCK, keyPressDelay);
 	tap_code_delay(portHotkey, keyPressDelay); // Send the keycode corresponding to the target port number
@@ -1026,7 +1026,7 @@ static void change_usb(uint16_t portHotkey, int ledNumber)
 	tap_code(KC_ENTER);
 }
 
-// Method to change only the audio focus on the ATEN CS1924 KVMP switch to target port
+// Method to change only the audio focus on the ATEN CS1924/CS1824 KVMP switch to target port
 static void change_audio(uint16_t portHotkey, int ledNumber)
 {
 	all_leds_off_noeeprom(); // Turn off all LEDs
@@ -1041,7 +1041,7 @@ static void change_audio(uint16_t portHotkey, int ledNumber)
 	///port_config_report(AUDIO, illuminationTime); // Report port or focus configuration on OLED screen (with auto-clear)
 	///light_led_for(ledNumber, kvmpConfig.Audio.Color, (uint16_t)illuminationTime); // Turn on keypad LED for selected audio-focused port for a period of time (they will auto-off)
 	
-	// Send series of key taps (macro) to direct the ATEN CS1924 KVMP switch's audio to focus on a target port
+	// Send series of key taps (macro) to direct the ATEN CS1924/CS1824 KVMP switch's audio to focus on a target port
 	tap_code_delay(KC_SCROLL_LOCK, keyPressDelay);
 	tap_code_delay(KC_SCROLL_LOCK, keyPressDelay);
 	tap_code_delay(portHotkey, keyPressDelay); // Send the keycode corresponding to the target port number
@@ -1205,11 +1205,11 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 void kvm1_check(void) {
 	int inputCheck = kvmpConfig.Device.Port + kvmpConfig.KVM.Port + kvmpConfig.Usb.Port + kvmpConfig.Audio.Port;
 	if (inputCheck == -4) {
-		// MacroPad hasn't been used to send port or focus selection input to ATEN CS1924 KVMP switch
+		// MacroPad hasn't been used to send port or focus selection input to ATEN CS1924/CS1824 KVMP switch
 		error_flash(); // Flash error pattern on MacroPad
 	}
 	else {
-		if (kvmpConfig.Device.Port == kvmpConfig.KVM.Port && kvmpConfig.KVM.Port == kvmpConfig.Audio.Port) { // Check if KVM, USB, and Audio focus on the ATEN CS1924 KVMP switch are all on the same port
+		if (kvmpConfig.Device.Port == kvmpConfig.KVM.Port && kvmpConfig.KVM.Port == kvmpConfig.Audio.Port) { // Check if KVM, USB, and Audio focus on the ATEN CS1924/CS1824 KVMP switch are all on the same port
 			port_config_report(DEVICE, illuminationTime); // Report selected port (device) on OLED screen (with auto-clear)
 		} else {
 			port_config_report(ALL, illuminationTime); // Report port or focus configuration for all devices on OLED screen (with auto-clear)
@@ -1246,7 +1246,7 @@ void suspend_wakeup_init_user(void) {
 // *  ARCHIVE  *
 // *************
 
-/* // Method to output ATEN CS1924 port or focus status via text information on the OLED screen
+/* // Method to output ATEN CS1924/CS1824 port or focus status via text information on the OLED screen
 static void port_config_report(PortReportingType type, uint16_t ms)
 {
 	char line1[16]; // Create a buffer
