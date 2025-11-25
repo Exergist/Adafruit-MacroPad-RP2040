@@ -127,7 +127,6 @@ KmConfig kmConfig = { // Initialize KM (CS62KM) configuration variable
 // ************************
 
 // Only declared here as needed
-///void error_flash(HSV color);
 void kvmp_config_report(KvmpConfig kvmpConfig, PortReportingType type, uint16_t ms);
 void change_KM_port(int portNumber);
 void change_KVMP_port(KvmpConfig kvmpConfig, int portHotkey, int ledNumber);
@@ -808,28 +807,9 @@ static void all_leds_off_noeeprom(void) {
     }
 }
 
-/* // Method for flashing RGB LEDs to alert of an issue or unexpected situation
-void error_flash(HSV color)
-{	
-	float timeStep = 125; // Time step for cycling flashing colors (ms)
-	int flashTime = illuminationTime; // Amount of time to flash LEDs (ms)
-	float timer = 0;
-	
-	// Loop over flashTime while cycling displayed colors every timeStep
-	while (timer < flashTime)
-	{
-		rgblight_sethsv_noeeprom(color.h, color.s, color.v); // Set all LEDs to specified HSV color (without saving to EEPROM)
-		wait_ms(timeStep); // Brief pause
-		all_leds_off_noeeprom(); // Turn off all LEDs
-		wait_ms(timeStep); // Brief pause
-		timer += (timeStep * 2); // Increment the flash timer
-	}
-} */
-
 // Method for flashing RGB LEDs to alert of an issue or unexpected situation (in deferred context)
-static uint32_t deferred_error_flash_callback(uint32_t trigger_time, void *cb_arg) {
-    HSV color = *(HSV *)cb_arg; // Capture passed-in color for the error_flash
-    ///error_flash(color); // Call error_flash with inputted color
+static uint32_t deferred_error_flash(uint32_t trigger_time, void *cb_arg) {
+    HSV color = *(HSV *)cb_arg; // Capture passed-in color for the deferred_error_flash
 	
 	float timeStep = 125; // Time step for cycling flashing colors (ms)
 	int flashTime = illuminationTime; // Amount of time to flash LEDs (ms)
@@ -900,7 +880,7 @@ void kvmp_config_report(KvmpConfig kvmpConfig, PortReportingType type, uint16_t 
 					// Write content on the OLED screen
 					oled_write("Undefined device image", false); 				
 					// Flash error pattern on MacroPad
-					defer_exec(1, deferred_error_flash_callback, &errorColor);
+					defer_exec(1, deferred_error_flash, &errorColor);
 					return;
 				}
 				// Write the port number for the device
@@ -966,7 +946,7 @@ void kvmp_config_report(KvmpConfig kvmpConfig, PortReportingType type, uint16_t 
 			// Write content on the OLED screen
 			oled_write("Undefined case", false); 				
 			// Flash error pattern on MacroPad
-			defer_exec(1, deferred_error_flash_callback, &errorColor);
+			defer_exec(1, deferred_error_flash, &errorColor);
 			return;
 	}
 	
@@ -1263,7 +1243,7 @@ void kvmp1_check(void) {
 	int inputCheck = kvmp1Config.Device.Port + kvmp1Config.KVM.Port + kvmp1Config.Usb.Port + kvmp1Config.Audio.Port;
 	if (inputCheck == -4) { // Check if MacroPad hasn't been used to send port or focus selection input to ATEN CS1924 KVMP switch	
 		// Flash error pattern on MacroPad
-        defer_exec(1, deferred_error_flash_callback, &errorColor);
+        defer_exec(1, deferred_error_flash, &errorColor);
 	}
 }
 
@@ -1276,7 +1256,7 @@ void kvmp2_check(void) {
 	// Trigger error flashing if needed
 	if (kvmp2Config.Device.Port == -1) { // Check if MacroPad hasn't been used to send port or focus selection input to the ATEN CS1824 KVMP switch
 		// Flash error pattern on MacroPad
-        defer_exec(1, deferred_error_flash_callback, &errorColor);
+        defer_exec(1, deferred_error_flash, &errorColor);
 	}
 }
 
