@@ -1,6 +1,3 @@
-// TODO
-// pressing the KVM, USB, or audio port as the FIRST button shows the ? but doesn't show the other devices/columns. first press should show at least 1 image
-
 /*
 //  __  __                      _____          _   _____  _____ ___   ___  _  _    ___  
 // |  \/  |                    |  __ \        | | |  __ \|  __ \__ \ / _ \| || |  / _ \ 
@@ -103,6 +100,7 @@ int illuminationTime = 2000; // Time in milliseconds to illuminate LEDs and OLED
 int keyPressDelay = 25; // Time in milliseconds to wait between virtually releasing a pressed (tapped) key
 static deferred_token led_off_tok[RGBLIGHT_LED_COUNT]; // One deferred token per LED
 static deferred_token oled_off_tok; // One deferred token for the OLED screen
+static HSV errorColor = { HSV_YELLOW }; // HSV flash color for showing errors
 
 KvmpConfig kvmp1Config = { // Initialize KVMP 1 (CS1924) configuration variable	
 	.Device = { .Port = -1, .Color = (HSV){HSV_WHITE} },
@@ -129,7 +127,7 @@ KmConfig kmConfig = { // Initialize KM (CS62KM) configuration variable
 // ************************
 
 // Only declared here as needed
-void error_flash(void);
+///void error_flash(HSV color);
 void kvmp_config_report(KvmpConfig kvmpConfig, PortReportingType type, uint16_t ms);
 void change_KM_port(int portNumber);
 void change_KVMP_port(KvmpConfig kvmpConfig, int portHotkey, int ledNumber);
@@ -810,8 +808,8 @@ static void all_leds_off_noeeprom(void) {
     }
 }
 
-// Method for flashing RGB LEDs to alert of an issue or unexpected situation
-void error_flash(void)
+/* // Method for flashing RGB LEDs to alert of an issue or unexpected situation
+void error_flash(HSV color)
 {	
 	float timeStep = 125; // Time step for cycling flashing colors (ms)
 	int flashTime = illuminationTime; // Amount of time to flash LEDs (ms)
@@ -820,12 +818,34 @@ void error_flash(void)
 	// Loop over flashTime while cycling displayed colors every timeStep
 	while (timer < flashTime)
 	{
-		rgblight_sethsv_noeeprom(HSV_YELLOW); // Set all LEDs to yellow (without saving to EEPROM)
+		rgblight_sethsv_noeeprom(color.h, color.s, color.v); // Set all LEDs to specified HSV color (without saving to EEPROM)
 		wait_ms(timeStep); // Brief pause
 		all_leds_off_noeeprom(); // Turn off all LEDs
 		wait_ms(timeStep); // Brief pause
 		timer += (timeStep * 2); // Increment the flash timer
 	}
+} */
+
+// Method for flashing RGB LEDs to alert of an issue or unexpected situation (in deferred context)
+static uint32_t deferred_error_flash_callback(uint32_t trigger_time, void *cb_arg) {
+    HSV color = *(HSV *)cb_arg; // Capture passed-in color for the error_flash
+    ///error_flash(color); // Call error_flash with inputted color
+	
+	float timeStep = 125; // Time step for cycling flashing colors (ms)
+	int flashTime = illuminationTime; // Amount of time to flash LEDs (ms)
+	float timer = 0;
+	
+	// Loop over flashTime while cycling displayed colors every timeStep
+	while (timer < flashTime)
+	{
+		rgblight_sethsv_noeeprom(color.h, color.s, color.v); // Set all LEDs to specified HSV color (without saving to EEPROM)
+		wait_ms(timeStep); // Brief pause
+		all_leds_off_noeeprom(); // Turn off all LEDs
+		wait_ms(timeStep); // Brief pause
+		timer += (timeStep * 2); // Increment the flash timer
+	}
+	
+    return 0; // Don't reschedule
 }
 
 #endif
@@ -877,7 +897,10 @@ void kvmp_config_report(KvmpConfig kvmpConfig, PortReportingType type, uint16_t 
 				} else if (kvmpConfig.Device.Port == 3) { // Check if port 3 is active
 					oled_blit_P(pc64x64, 64, 64, 32, 0, illuminationTime); // Show PC image on OLED screen
 				} else {
-					error_flash(); // Flash error pattern on MacroPad
+					// Write content on the OLED screen
+					oled_write("Undefined device image", false); 				
+					// Flash error pattern on MacroPad
+					defer_exec(1, deferred_error_flash_callback, &errorColor);
 					return;
 				}
 				// Write the port number for the device
@@ -894,6 +917,7 @@ void kvmp_config_report(KvmpConfig kvmpConfig, PortReportingType type, uint16_t 
 				}
 			} else {
 				// Write the port number for the device
+				oled_set_cursor(0, 0);  // Position the OLED cursor at the top left of the screen
 				snprintf(line1, sizeof(line1), "Port:?"); // Insert content into line1
 				oled_write_ln(line1, false);  // Write line1 and include newline
 				
@@ -908,7 +932,7 @@ void kvmp_config_report(KvmpConfig kvmpConfig, PortReportingType type, uint16_t 
 			break;
 			
 		case ALL:
-			if (kvmpConfig.Device.Port == kvmpConfig.KVM.Port && kvmpConfig.KVM.Port == kvmpConfig.Audio.Port) { // Check if all focus is actually on one device
+			if (kvmpConfig.KVM.Port == kvmpConfig.Usb.Port && kvmpConfig.Usb.Port == kvmpConfig.Audio.Port) { // Check if all focus is actually on one device
 				kvmp_config_report(kvmpConfig, DEVICE, illuminationTime); // Report selected port (device) configuration on OLED screen (with auto-clear)
 				return;
 			}
@@ -939,7 +963,10 @@ void kvmp_config_report(KvmpConfig kvmpConfig, PortReportingType type, uint16_t 
 			break;
 			
 		default:
-			error_flash(); // Flash error pattern on MacroPad
+			// Write content on the OLED screen
+			oled_write("Undefined case", false); 				
+			// Flash error pattern on MacroPad
+			defer_exec(1, deferred_error_flash_callback, &errorColor);
 			return;
 	}
 	
@@ -1020,7 +1047,7 @@ static void change_usb(KvmpConfig kvmpConfig, uint16_t portHotkey, int ledNumber
 	all_leds_off_noeeprom(); // Turn off all LEDs
 	kvmpConfig.Usb.Port = ledNumber-6; // Update kvmpConfig to reflect the USB focus change
 	if (kvmpConfig.KVM.Port == kvmpConfig.Usb.Port && kvmpConfig.Usb.Port == kvmpConfig.Audio.Port) { // Check if all elements are focusing on the same port
-		kvmpConfig.Device.Port = kvmpConfig.KVM.Port; // Update kvmpConfig.Device.Port to align with the focus of all other elements
+		kvmpConfig.Device.Port = kvmpConfig.Usb.Port; // Update kvmpConfig.Device.Port to align with the focus of all other elements
 	}
 	else {
 		kvmpConfig.Device.Port = -1; // Update kvmpConfig.Device.Port to indicate that its value is not set
@@ -1048,7 +1075,7 @@ static void change_audio(KvmpConfig kvmpConfig, uint16_t portHotkey, int ledNumb
 	all_leds_off_noeeprom(); // Turn off all LEDs
 	kvmpConfig.Audio.Port = ledNumber-9; // Update kvmpConfig to reflect the Audio focus change
 	if (kvmpConfig.KVM.Port == kvmpConfig.Usb.Port && kvmpConfig.Usb.Port == kvmpConfig.Audio.Port) { // Check if all elements are focusing on the same port
-		kvmpConfig.Device.Port = kvmpConfig.KVM.Port; // Update kvmpConfig.Device.Port to align with the focus of all other elements
+		kvmpConfig.Device.Port = kvmpConfig.Audio.Port; // Update kvmpConfig.Device.Port to align with the focus of all other elements
 	}
 	else {
 		kvmpConfig.Device.Port = -1; // Update kvmpConfig.Device.Port to indicate that its value is not set
@@ -1223,31 +1250,33 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 }
 
 // Method for reporting current configuration on the ATEN CS1924 KVMP switch
-void kvmp1_check(void) {
-	int inputCheck = kvmp1Config.Device.Port + kvmp1Config.KVM.Port + kvmp1Config.Usb.Port + kvmp1Config.Audio.Port;
-	if (inputCheck == -4) {
-		// MacroPad hasn't been used to send port or focus selection input to ATEN CS1924 KVMP switch
-		error_flash(); // Flash error pattern on MacroPad
+void kvmp1_check(void) {	
+	// Report configuration status on OLED
+	all_leds_off_noeeprom(); // Turn off all key LEDs
+	if (kvmp1Config.KVM.Port == kvmp1Config.Usb.Port && kvmp1Config.Usb.Port == kvmp1Config.Audio.Port) { // Check if KVM, USB, and Audio focus on the ATEN CS1924/CS1824 KVMP switch are all on the same port
+		kvmp_config_report(kvmp1Config, DEVICE, illuminationTime); // Report selected KVMP port (device) on OLED screen (with auto-clear)
+	} else {
+		kvmp_config_report(kvmp1Config, ALL, illuminationTime); // Report KVMP port or focus configuration for all devices on OLED screen (with auto-clear)
 	}
-	else {
-		all_leds_off_noeeprom(); // Turn off all key LEDs
-		if (kvmp1Config.Device.Port == kvmp1Config.KVM.Port && kvmp1Config.KVM.Port == kvmp1Config.Audio.Port) { // Check if KVM, USB, and Audio focus on the ATEN CS1924/CS1824 KVMP switch are all on the same port
-			kvmp_config_report(kvmp1Config, DEVICE, illuminationTime); // Report selected KVMP port (device) on OLED screen (with auto-clear)
-		} else {
-			kvmp_config_report(kvmp1Config, ALL, illuminationTime); // Report KVMP port or focus configuration for all devices on OLED screen (with auto-clear)
-		}
+	
+	// Trigger error flashing if needed
+	int inputCheck = kvmp1Config.Device.Port + kvmp1Config.KVM.Port + kvmp1Config.Usb.Port + kvmp1Config.Audio.Port;
+	if (inputCheck == -4) { // Check if MacroPad hasn't been used to send port or focus selection input to ATEN CS1924 KVMP switch	
+		// Flash error pattern on MacroPad
+        defer_exec(1, deferred_error_flash_callback, &errorColor);
 	}
 }
 
 // Method for reporting current configuration on the CS1824 KVMP switch
 void kvmp2_check(void) {
-	if (kvmp2Config.Device.Port == -1) {
-		// MacroPad hasn't been used to send port or focus selection input to the ATEN CS1824 KVMP switch
-		error_flash(); // Flash error pattern on MacroPad
-	}
-	else {
-		all_leds_off_noeeprom(); // Turn off all key LEDs
-		kvmp_config_report(kvmp2Config, DEVICE, illuminationTime); // Report selected KVMP port (device) on OLED screen (with auto-clear)
+	// Report configuration status on OLED
+	all_leds_off_noeeprom(); // Turn off all key LEDs
+	kvmp_config_report(kvmp2Config, DEVICE, illuminationTime); // Report selected KVMP port (device) on OLED screen (with auto-clear)
+	
+	// Trigger error flashing if needed
+	if (kvmp2Config.Device.Port == -1) { // Check if MacroPad hasn't been used to send port or focus selection input to the ATEN CS1824 KVMP switch
+		// Flash error pattern on MacroPad
+        defer_exec(1, deferred_error_flash_callback, &errorColor);
 	}
 }
 
