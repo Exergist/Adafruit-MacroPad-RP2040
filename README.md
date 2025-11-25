@@ -14,7 +14,7 @@ Jump to the latest release here (LINK!!!).
 Configuration for simultaneously controlling the ATEN [CS62KM](https://www.aten.com/us/en/products/kvm/cable-kvm-switches/cs62km/) KM switch _as well as_ the ATEN [CS1824](https://www.aten.com/us/en/products/kvm/desktop-kvm-switches/cs1824/) _and_ [CS1924](https://www.aten.com/us/en/products/kvm/desktop-kvm-switches/cs1924/) KVMP switches. 
   * The MacroPad connects to the CS62KM, which is then connected to both the CS1824 and CS1924
   * This enables the MacroPad to control both the CS1824 and CS1924 by using the CS62KM as an intermediary
-  * Note that the ATEN CS62KM does not support media keys, so rotating the MacroPad encoder when it is connected to the CS62KM does not change the computer volume
+  * Note that the ATEN CS62KM does not support media keys (see below Keymap), so the MacroPad cannot change the computer volume when it is connected using the CS62KM
 
 Jump to the files [here](https://github.com/Exergist/Adafruit-MacroPad-RP2040/tree/main/QMK/UltraKvmpSwitch).
 <details>
