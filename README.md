@@ -85,18 +85,18 @@ Jump to the files [here](https://github.com/Exergist/Adafruit-MacroPad-RP2040/tr
  3. Once the compiling is complete, download and save the firmware uf2 file.
 </details>
 <details>
-<summary> <b>QMK Code-Only Method</b> </summary>
+<summary> <b>QMK Code-Only Method (Recommended) </b> </summary>
 <details>
 <summary> <i>General</i> </summary>
  
  1. Go through [The QMK Tutorial](https://docs.qmk.fm/#/newbs). To get started, create a new keymap project within QMK MSYS environment by running `qmk new-keymap -kb [keyboard name] -km [name of project]`
-    * Example: `qmk new-keymap -kb adafruit/macropad -km SuperKvmpSwitch`
+    * Example: `qmk new-keymap -kb adafruit/macropad -km UltraKvmpSwitch`
  3. Create the desired keyboard behavior by building content in the _keymap.c_ file.
  4. Add (or copy from other QMK MacroPad RP2040 efforts) _config.h_ and _rules.mk_ files if needed (most likely YES) into the same location as the _keymap.c_ file.
  5. When _keymap.c_ and (if applicable) _config.h_ and _rules.mk_ are ready, go back to QMK MSYS and run `qmk compile -j 0 -kb [keyboard name] -km [name of project]`.
-    * Example: `qmk compile -j 0 -kb adafruit/macropad -km SuperKvmpSwitch`
+    * Example: `qmk compile -j 0 -kb adafruit/macropad -km UltraKvmpSwitch`
  6. The outputted firmware (uf2 file) is located at `...qmk_firmware\.build\[keyboard_name]_[project_name].uf2`
-    * Example: `...qmk_firmware\.build\adafruit_macropad_SuperKvmpSwitch.uf2`
+    * Example: `...qmk_firmware\.build\adafruit_macropad_UltraKvmpSwitch.uf2`
 </details>
  <details>
 <summary> <i>Creating Images for the OLED Screen</i> </summary>
@@ -113,7 +113,7 @@ Jump to the files [here](https://github.com/Exergist/Adafruit-MacroPad-RP2040/tr
      * Draw Mode = Vertical - 1 bit per pixel
   3. The image2cpp tool provides a preview of what the image will look like for the provided Canvas Size.
   4. Press the "Generate code" button, and a byte array corresponding to the preview image will be created.
-  5. Leverage this byte array in the `keymap.c` file (see [Source](https://github.com/Exergist/Adafruit-MacroPad-RP2040/blob/main/QMK/SuperKvmpSwitch/Source/keymap.c) for example usage).
+  5. Leverage this byte array in the `keymap.c` file (see [Source](https://github.com/Exergist/Adafruit-MacroPad-RP2040/blob/main/QMK/UltraKvmpSwitch/Source/keymap.c) for example usage).
 </details>
 </details>
 
