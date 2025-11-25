@@ -883,31 +883,32 @@ void kvmp_config_report(KvmpConfig kvmpConfig, PortReportingType type, uint16_t 
 					defer_exec(1, deferred_error_flash, &errorColor);
 					return;
 				}
+				
+				// Write the target KVMP's primary function (as a footer)
+				oled_set_cursor(0, 0);   // Position the OLED cursor at the top right of the screen
+				if (kvmpConfig.Name == kvmp1Config.Name) {
+					oled_write("Prime", false); // Write content on the OLED screen
+				} else {
+					oled_write("Touch", false); // Write content on the OLED screen
+				}
+				
 				// Write the port number for the device
-				oled_set_cursor(0, 0);  // Position the OLED cursor at the top left of the screen
+				oled_set_cursor(0, 1);  // Position the OLED cursor at the top left of the screen
 				snprintf(line1, sizeof(line1), "Port:%d", kvmpConfig.Device.Port); // Insert content into line1
 				oled_write(line1, false);  // Write line1 to the OLED screen
-				
+			} else {
 				// Write the target KVMP's primary function (as a footer)
-				oled_set_cursor(16, 0);   // Position the OLED cursor at the top right of the screen
+				oled_set_cursor(0, 0);   // Position the OLED cursor at the top right of the screen
 				if (kvmpConfig.Name == kvmp1Config.Name) {
 					oled_write("Prime", false); // Write content on the OLED screen
 				} else {
 					oled_write("Touch", false); // Write content on the OLED screen
 				}
-			} else {
+				
 				// Write the port number for the device
-				oled_set_cursor(0, 0);  // Position the OLED cursor at the top left of the screen
+				oled_set_cursor(0, 1);  // Position the OLED cursor at the top left of the screen
 				snprintf(line1, sizeof(line1), "Port:?"); // Insert content into line1
 				oled_write_ln(line1, false);  // Write line1 and include newline
-				
-				// Write the target KVMP's primary function (as a footer)
-				oled_set_cursor(16, 0);   // Position the OLED cursor at the top right of the screen
-				if (kvmpConfig.Name == kvmp1Config.Name) {
-					oled_write("Prime", false); // Write content on the OLED screen
-				} else {
-					oled_write("Touch", false); // Write content on the OLED screen
-				}
 			}
 			break;
 			

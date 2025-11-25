@@ -55,11 +55,11 @@
 //#define DEVICE_VER      0x0001
 //#define MANUFACTURER    "Adafruit"
 //#define PRODUCT         "macropad"
-#define DESCRIPTION       "12 key macropad with rotary encoder and OLED screen"
+#define DESCRIPTION       "12 key macropad with per-key backlighting, rotary encoder, OLED screen, and audio output"
 #define RAW_USAGE_PAGE 	  0xFF60 // Raw HID communication
 #define RAW_USAGE_ID 	  0x61 // Raw HID communication
 
-#define TAPPING_TERM 250 // Speed for double-tap
+#define TAPPING_TERM 200 // Speed for double-tap and key hold recognition
 
 // RGB LEDs are ws2812
 #define RGB_DI_PIN GP0
