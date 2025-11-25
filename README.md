@@ -14,6 +14,7 @@ Jump to the latest release here (LINK!!!).
 Configuration for simultaneously controlling the ATEN [CS62KM](https://www.aten.com/us/en/products/kvm/cable-kvm-switches/cs62km/) KM switch _as well as_ the ATEN [CS1824](https://www.aten.com/us/en/products/kvm/desktop-kvm-switches/cs1824/) _and_ [CS1924](https://www.aten.com/us/en/products/kvm/desktop-kvm-switches/cs1924/) KVMP switches. 
   * The MacroPad connects to the CS62KM, which is then connected to both the CS1824 and CS1924
   * This enables the MacroPad to control both the CS1824 and CS1924 by using the CS62KM as an intermediary
+  * Note that the ATEN CS62KM does not support media keys, so rotating the MacroPad encoder when it is connected to the CS62KM does not change the computer volume
 
 Jump to the files [here](https://github.com/Exergist/Adafruit-MacroPad-RP2040/tree/main/QMK/UltraKvmpSwitch).
 <details>
@@ -21,17 +22,17 @@ Jump to the files [here](https://github.com/Exergist/Adafruit-MacroPad-RP2040/tr
  
  * OLED Screen = Displays configuration information
  * Encoder (ENCODER_DANCE)
-   * Single-Tap = Illuminate keys corresponding to the current configuration for the CS1924 KVMP switch
-   * Press-Hold = Illuminate key corresponding to the current configuration for the CS1824 KVMP switch
+   * Single-Tap = Illuminate keys and populate OLED screen to show the current configuration for the CS1924 KVMP switch
+   * Press-Hold = Illuminate key and populate OLED screen to show the current configuration for the CS1824 KVMP switch
    * Clockwise Rotation = Volume Up
    * Counter-Clockwise Rotation = Volume Down
  * Button1 (PORT1_DANCE)
    * Single-Tap = Change to port 1 on the CS1924
    * Press-Hold = Change to port 1 on the CS1824
-  * Button2 (PORT2_DANCE)
+ * Button2 (PORT2_DANCE)
    * Single-Tap = Change to port 2 on the CS1924
    * Press-Hold = Change to port 2 on the CS1824
-  * Button3 (PORT3_DANCE)
+ * Button3 (PORT3_DANCE)
    * Single-Tap = Change to port 3 on the CS1924
    * Press-Hold = Change to port 3 on the CS1824
  * Button4 (KVM_1) = Change KVM focus on the CS1924 to port 1
@@ -47,7 +48,7 @@ Jump to the files [here](https://github.com/Exergist/Adafruit-MacroPad-RP2040/tr
 
 ### SuperKvmpSwitch
 Configuration for the ATEN [CS1924](https://www.aten.com/us/en/products/kvm/desktop-kvm-switches/cs1924/) _or_ [CS1824](https://www.aten.com/us/en/products/kvm/desktop-kvm-switches/cs1824/) KVMP switch.  
-  * In this configuration the MacroPad connects directly to the CS1924 or CS1824 KVMP switch
+  * The MacroPad connects directly to the CS1924 or CS1824 KVMP switch
 
 Jump to the files [here](https://github.com/Exergist/Adafruit-MacroPad-RP2040/tree/main/QMK/SuperKvmpSwitch).
 <details>
@@ -55,7 +56,7 @@ Jump to the files [here](https://github.com/Exergist/Adafruit-MacroPad-RP2040/tr
  
  * OLED Screen = Displays configuration information
  * Encoder
-   * Single-Tap = PORT_CHECK = Illuminate keys corresponding to the current configuration for the CS1824/CS1924
+   * Single-Tap = PORT_CHECK = Illuminate keys and populate OLED screen to show the current configuration for the CS1824/CS1924
    * Clockwise Rotation = Volume Up
    * Counter-Clockwise Rotation = Volume Down
  * Button1 (PORT_1) = Change to port 1 on the CS1824/CS1924
@@ -141,7 +142,6 @@ Adafruit provides a [comprehensive guide](https://learn.adafruit.com/adafruit-ma
 </details>
 
 ## Notes
-* The ATEN CS62KM does not support media keys, so rotating the MacroPad encoder when it is connected to the CS62KM does not change the PC volume
 * My MacroPad RP2040 was ordered through [Adafruit](https://www.adafruit.com/product/5128) in December 2021
 * Additional MacroPad RP2040 resources may be found on [Adafruit's website](https://learn.adafruit.com/adafruit-macropad-rp2040)
 * Additional QMK resources are compiled in the [QMK Syllabus](https://docs.qmk.fm/#/syllabus)
