@@ -2,7 +2,7 @@
 <img width="574" height="431" alt="image" src="https://github.com/user-attachments/assets/769a5053-d559-46b8-8a90-bd025da6390b" />
 
 ## What Is This?
-This project includes QMK files for various keymaps for the [Adafruit MacroPad RP2040](https://learn.adafruit.com/adafruit-macropad-rp2040), which includes 12 RGB LED key switches, a rotary encoder, and an OLED screen. 
+This project includes QMK files for various keymaps for the [Adafruit MacroPad RP2040](https://learn.adafruit.com/adafruit-macropad-rp2040), which includes 12 RGB LED key switches, a pressable rotary encoder, an OLED screen, and audio output capability. 
 
 Jump to the latest release here (LINK!!!).
 
@@ -10,28 +10,66 @@ Jump to the latest release here (LINK!!!).
 ### Layout
 <img width="575" height="712" alt="image" src="https://github.com/user-attachments/assets/625c252d-d6e4-4647-9010-c3e3ee2dcb0d" />
 
-### SuperKvmpSwitch
-Control device for the [ATEN CS1924](https://www.aten.com/us/en/products/kvm/desktop-kvm-switches/cs1924/) 4-port KVMP switch. Jump to the files [here](https://github.com/Exergist/Adafruit-MacroPad-RP2040/tree/main/QMK/SuperKvmpSwitch). 
+### UltraKvmpSwitch
+Configuration for simultaneously controlling the ATEN [CS62KM](https://www.aten.com/us/en/products/kvm/cable-kvm-switches/cs62km/) KM switch _as well as_ the ATEN [CS1824](https://www.aten.com/us/en/products/kvm/desktop-kvm-switches/cs1824/) _and_ [CS1924](https://www.aten.com/us/en/products/kvm/desktop-kvm-switches/cs1924/) KVMP switches. 
+  * The MacroPad connects to the CS62KM, which is then connected to both the CS1824 and CS1924
+  * This enables the MacroPad to control both the CS1824 and CS1924 by using the CS62KM as an intermediary
+
+Jump to the files [here](https://github.com/Exergist/Adafruit-MacroPad-RP2040/tree/main/QMK/UltraKvmpSwitch).
 <details>
 <summary><b>Keymap</b></summary>
  
- * OLED Screen = Displays information about CS1924 KVMP's current configuration
- * Encoder
-   * Single-Tap = PORT_CHECK = Illuminate keys corresponding to the CS1924 KVMP's current configuration
+ * OLED Screen = Displays configuration information
+ * Encoder (ENCODER_DANCE)
+   * Single-Tap = Illuminate keys corresponding to the current configuration for the CS1924 KVMP switch
+   * Press-Hold = Illuminate key corresponding to the current configuration for the CS1824 KVMP switch
    * Clockwise Rotation = Volume Up
    * Counter-Clockwise Rotation = Volume Down
- * Button1 = PORT_1 = Change to port 1 on the CS1924 switch
- * Button2 = PORT_2 = Change to port 2 on the CS1924 switch
- * Button3 = PORT_3 = Change to port 3 on the CS1924 switch
- * Button4 = KVM_1 = Change KVM focus on the CS1924 switch to port 1
- * Button5 = KVM_2 = Change KVM focus on the CS1924 switch to port 2
- * Button6 = KVM_3 = Change KVM focus on the CS1924 switch to port 3
- * Button7 = USB_1 = Change USB hub focus on the CS1924 switch to port 1
- * Button8 = USB_2 = Change USB hub focus on the CS1924 switch to port 2
- * Button9 = USB_3 = Change USB hub focus on the CS1924 switch to port 3
- * Button10 = AUDIO_1 = Change Audio focus on the CS1924 switch to port 1
- * Button11 = AUDIO_2 = Change Audio focus on the CS1924 switch to port 2
- * Button12 = AUDIO_3 = Change Audio focus on the CS1924 switch to port 3
+ * Button1 (PORT1_DANCE)
+   * Single-Tap = Change to port 1 on the CS1924
+   * Press-Hold = Change to port 1 on the CS1824
+  * Button2 (PORT2_DANCE)
+   * Single-Tap = Change to port 2 on the CS1924
+   * Press-Hold = Change to port 2 on the CS1824
+  * Button3 (PORT3_DANCE)
+   * Single-Tap = Change to port 3 on the CS1924
+   * Press-Hold = Change to port 3 on the CS1824
+ * Button4 (KVM_1) = Change KVM focus on the CS1924 to port 1
+ * Button5 (KVM_2) = Change KVM focus on the CS1924 to port 2
+ * Button6 (KVM_3) = Change KVM focus on the CS1924 to port 3
+ * Button7 (USB_1) = Change USB hub focus on the CS1924 to port 1
+ * Button8 (USB_2) = Change USB hub focus on the CS1924 to port 2
+ * Button9 (USB_3) = Change USB hub focus on the CS1924 to port 3
+ * Button10 (AUDIO_1) = Change Audio focus on the CS1924 to port 1
+ * Button11 (AUDIO_2) = Change Audio focus on the CS1924 to port 2
+ * Button12 (AUDIO_3) = Change Audio focus on the CS1924 to port 3
+</details>
+
+### SuperKvmpSwitch
+Configuration for the ATEN [CS1924](https://www.aten.com/us/en/products/kvm/desktop-kvm-switches/cs1924/) _or_ [CS1824](https://www.aten.com/us/en/products/kvm/desktop-kvm-switches/cs1824/) KVMP switch.  
+  * In this configuration the MacroPad connects directly to the CS1924 or CS1824 KVMP switch
+
+Jump to the files [here](https://github.com/Exergist/Adafruit-MacroPad-RP2040/tree/main/QMK/SuperKvmpSwitch).
+<details>
+<summary><b>Keymap</b></summary>
+ 
+ * OLED Screen = Displays configuration information
+ * Encoder
+   * Single-Tap = PORT_CHECK = Illuminate keys corresponding to the current configuration for the CS1824/CS1924
+   * Clockwise Rotation = Volume Up
+   * Counter-Clockwise Rotation = Volume Down
+ * Button1 (PORT_1) = Change to port 1 on the CS1824/CS1924
+ * Button2 (PORT_2) = Change to port 2 on the CS1824/CS1924
+ * Button3 (PORT_3) = Change to port 3 on the CS1824/CS1924
+ * Button4 (KVM_1) = Change KVM focus on the CS1824/CS1924 to port 1
+ * Button5 (KVM_2) = Change KVM focus on the CS1824/CS1924 to port 2
+ * Button6 (KVM_3) = Change KVM focus on the CS1824/CS1924 to port 3
+ * Button7 (USB_1) = Change USB hub focus on the CS1824/CS1924 to port 1
+ * Button8 (USB_2) = Change USB hub focus on the CS1824/CS1924 to port 2
+ * Button9 (USB_3) = Change USB hub focus on the CS1824/CS1924 to port 3
+ * Button10 (AUDIO_1) = Change Audio focus on the CS1824/CS1924 to port 1
+ * Button11 (AUDIO_2) = Change Audio focus on the CS1824/CS1924 to port 2
+ * Button12 (AUDIO_3) = Change Audio focus on the CS1824/CS1924 to port 3
 </details>
 
 ## How to Build and Install the Firmware?
@@ -103,12 +141,13 @@ Adafruit provides a [comprehensive guide](https://learn.adafruit.com/adafruit-ma
 </details>
 
 ## Notes
-* My MacroPad RP2040 was ordered through [Adafruit](https://www.adafruit.com/product/5128) in December 2021. 
-* Additional MacroPad RP2040 resources may be found on [Adafruit's website](https://learn.adafruit.com/adafruit-macropad-rp2040).
-* Additional QMK resources are compiled in the [QMK Syllabus](https://docs.qmk.fm/#/syllabus).
+* The ATEN CS62KM does not support media keys, so rotating the MacroPad encoder when it is connected to the CS62KM does not change the PC volume
+* My MacroPad RP2040 was ordered through [Adafruit](https://www.adafruit.com/product/5128) in December 2021
+* Additional MacroPad RP2040 resources may be found on [Adafruit's website](https://learn.adafruit.com/adafruit-macropad-rp2040)
+* Additional QMK resources are compiled in the [QMK Syllabus](https://docs.qmk.fm/#/syllabus)
 
 ## Acknowledgements
-* [QMK](https://qmk.fm/about) is developed and maintained by Jack Humbert of OLKB with contributions from the community (and Hasu).
-* Keymap header ASCII art by [patorjk](https://patorjk.com/software/taag/).
-* [ForsakenRei](https://github.com/ForsakenRei) for his [RP2040-MacroPad](https://github.com/ForsakenRei/RP2040-MacroPad/tree/main) project, which was a useful reference.
-* "Laptop" image created by Dong Gyu Yang from [Noun Project](https://thenounproject.com/icon/laptop-8086742/).
+* [QMK](https://qmk.fm/about) is developed and maintained by Jack Humbert of OLKB with contributions from the community (and Hasu)
+* Keymap header ASCII art by [patorjk](https://patorjk.com/software/taag/)
+* [ForsakenRei](https://github.com/ForsakenRei) for his [RP2040-MacroPad](https://github.com/ForsakenRei/RP2040-MacroPad/tree/main) project, which was a useful reference
+* "Laptop" image created by Dong Gyu Yang from [Noun Project](https://thenounproject.com/icon/laptop-8086742/)
