@@ -1,3 +1,6 @@
+// TODO
+// add more robustness for the LED lights turning OFF
+
 /*
 //  __  __                      _____          _   _____  _____ ___   ___  _  _    ___  
 // |  \/  |                    |  __ \        | | |  __ \|  __ \__ \ / _ \| || |  / _ \ 
