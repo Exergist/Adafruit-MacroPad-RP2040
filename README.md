@@ -113,7 +113,7 @@ Jump to the files [here](https://github.com/Exergist/Adafruit-MacroPad-RP2040/tr
      * Draw Mode = Vertical - 1 bit per pixel
   3. The image2cpp tool provides a preview of what the image will look like for the provided Canvas Size.
   4. Press the "Generate code" button, and a byte array corresponding to the preview image will be created.
-  5. Leverage this byte array in the `keymap.c` file (see [Source](https://github.com/Exergist/Adafruit-MacroPad-RP2040/blob/main/QMK/UltraKvmpSwitch/Source/keymap.c) for example usage).
+  5. Leverage this created byte array in the `keymap.c` file (see [Source](https://github.com/Exergist/Adafruit-MacroPad-RP2040/blob/main/QMK/UltraKvmpSwitch/Source/keymap.c) for example usage).
 </details>
 </details>
 
