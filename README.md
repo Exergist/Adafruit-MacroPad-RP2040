@@ -4,8 +4,6 @@
 ## What Is This?
 This project includes QMK files for various keymaps for the [Adafruit MacroPad RP2040](https://learn.adafruit.com/adafruit-macropad-rp2040), which includes 12 RGB LED key switches, a pressable rotary encoder, an OLED screen, and audio output capability. 
 
-Jump to the latest release here (LINK!!!).
-
 ## Key Maps
 ### Layout
 <img width="575" height="712" alt="image" src="https://github.com/user-attachments/assets/625c252d-d6e4-4647-9010-c3e3ee2dcb0d" />
