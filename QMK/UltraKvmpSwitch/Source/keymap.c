@@ -45,7 +45,7 @@ SOFTWARE.
 //   • OLED UI with device/port status and icons (fast, pixel-accurate blits; page-aligned)
 //   • RGB key lighting as visual feedback for current state
 //   • Timed auto-off for OLED and LEDs using deferred callbacks
-//   • Rotary encoder mapped to system volume (though this isn't supported by the CS62KM)
+//   • Rotary encoder mapped to system volume (though this isn't currently supported by the CS62KM)
 //   • Sleep/wake handling to clear/re-init OLED and LEDs
 
 // **********************
@@ -400,7 +400,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 // Defines the behavior for encoder rotation across all applicable layers
 const uint16_t PROGMEM encoder_map[][NUM_ENCODERS][NUM_DIRECTIONS] = {
-    [0] = { ENCODER_CCW_CW(KC_VOLD, KC_VOLU) } // Format = Counter-clockwise action, clockwise action
+	// Note that as of 12/12/2025 the CS62KM does not recognize media keys sent from the QMK devices I've tested
+	[0] = { ENCODER_CCW_CW(KC_AUDIO_VOL_DOWN, KC_AUDIO_VOL_UP) } // Format = Counter-clockwise action, clockwise action
 };
 
 #endif
