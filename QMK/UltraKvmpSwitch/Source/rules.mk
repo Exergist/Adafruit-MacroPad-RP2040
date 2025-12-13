@@ -5,8 +5,8 @@
 #BOOTLOADER = rp2040
 
 # Build Options
-#	Change to "no" to disable the options, or define them in the Makefile in
-#	the appropriate keymap folder that will get included automatically
+# Change to "no" to disable the options, or define them in the Makefile in
+# the appropriate keymap folder that will get included automatically
 
 ENCODER_MAP_ENABLE = yes	# Rotary encoder functionality
 BOOTMAGIC_ENABLE = no		# Virtual DIP switch configuration
@@ -23,7 +23,7 @@ BLUETOOTH_ENABLE = no		# Bluetooth with the Adafruit EZ-Key HID functionality
 RGBLIGHT_ENABLE = yes		# WS2812 RGB underlight functionality
 RGB_MATRIX_ENABLE = no		# Per-key RGB effects
 TAP_DANCE_ENABLE = yes		# Double press does something different
-RAW_ENABLE = yes			# Bidirectional communication between QMK and host computer via HID interface
+RAW_ENABLE = no				# Bidirectional communication between QMK and host computer via HID interface
 DEFERRED_EXEC_ENABLE = yes  # Ability to execute a callback after a specified period of time
 OLED_ENABLE = yes			# OLED functionality
 
